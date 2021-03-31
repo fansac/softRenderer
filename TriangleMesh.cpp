@@ -104,7 +104,7 @@ public:
 			return static_cast<size_t>(h1) << 16 | h2;
 		}
 	};
-	unordered_map<pair<uint16_t, uint16_t>, uint16_t, pair_hash> e_t_map;
+	unordered_map<pair<uint16_t, uint16_t>, uint16_t, pair_hash> e_index_map;
 
 	void add_vertex(double x, double y, double z) {
 		assert(this->vertices.size() < UINT16_MAX);
@@ -130,11 +130,11 @@ public:
 				v_iter->e_index = this->edges.size() - 1;
 				++ this->n_vertex;
 			}
-			if (auto e_t_iter = this->e_t_map.find(make_pair(v_index[i], v_index[(i + 1) % 3])) == this->e_t_map.end()) {
-				this->e_t_map[make_pair(v_index[(i + 1) % 3], v_index[i])] = this->edges.size() - 1;
+			if (auto e_t_iter = this->e_index_map.find(make_pair(v_index[i], v_index[(i + 1) % 3])) == this->e_index_map.end()) {
+				this->e_index_map[make_pair(v_index[(i + 1) % 3], v_index[i])] = this->edges.size() - 1;
 			}
 			else {
-				auto neighbour_index = this->e_t_map[make_pair(v_index[i], v_index[(i + 1) % 3])];
+				auto neighbour_index = this->e_index_map[make_pair(v_index[i], v_index[(i + 1) % 3])];
 				t_iter->e_nbr[i] = neighbour_index;
 				auto edge_neighbour = this->edges[neighbour_index];
 				this->triangles[edge_neighbour.t_index].e_nbr[edge_neighbour.i] = this->edges.size() - 1;
@@ -191,18 +191,11 @@ tuple<vector<uint16_t>, vector<uint16_t>, vector<uint16_t>> read_face_element_li
 	return make_tuple(v, vt, vn);
 }
 
-int main(void) {
-	cout << "main start!" << endl;
-	char pwd[100];
-	auto null_arg = _getcwd(pwd, 100);
 
-	TriangleMesh mesh;
-	system("pause");
-	// string file_name = "cube.obj"; 
-	string file_name = "cube.obj";
-	ifstream f_in(file_name);
+void read_mesh_from_obj_file(TriangleMesh &mesh, const string file_path) {
+	ifstream f_in(file_path);
 	if (!f_in) {
-		cerr << "cannot open file " + file_name + "." << endl;
+		cerr << "cannot open file " + file_path + "." << endl;
 		exit(1);
 	}
 	cout << "open file done!" << endl;
@@ -232,20 +225,30 @@ int main(void) {
 		}
 	}
 	f_in.close();
+	mesh.e_index_map.clear();
 	assert(static_cast<size_t>(mesh.n_vertex) == mesh.vertices.size());
 	system("pause");
+
+	cout << "mesh: " << endl;
 	unsigned int i = 0;
 	for (auto iter = mesh.vertices.begin(); iter != mesh.vertices.end(); ++iter) {
 		cout << "vertex " << i++ << endl;
 		cout << iter->getPos() << endl;
 		cout << iter->getNormal() << endl;
 	}
-	cout << "mesh: " << endl;
-	auto list = mesh.find_triangles_index_of_vertex(7);
-	for (int i = 0; i < list.size(); ++i) {
-		cout << list[i] << endl;
-	}
-	cout << "main end!" << endl;
+}
+int main(void) {
+	cout << "main start!" << endl;
+	char pwd[100];
+	auto null_arg = _getcwd(pwd, 100);
 	system("pause");
+
+	//TriangleMesh mesh;
+	//string file_name = "cube.obj";
+	//read_mesh_from_obj_file(mesh, file_name);
+	
+	
+	system("pause");
+	cout << "main end!" << endl;
 	return 0;
 }
