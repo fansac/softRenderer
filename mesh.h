@@ -6,7 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include <Eigen\Dense>
-
+#include "util.h"
 
 using namespace std;
 using namespace Eigen;
@@ -25,11 +25,13 @@ public:
 	void setX(double x);
 	void setY(double y);
 	void setZ(double z);
-	void setPosition(Vector3d new_position);
-	void setNormal(Vector3d n);
+	void set_position(Vector3d new_position);
+	void set_normal(Vector3d n);
+	void set_color(Vector3d c);
 
-	Vector3d getPos();
-	Vector3d getNormal();
+	Vector3d get_position();
+	Vector3d get_normal();
+	Vector3d get_color();
 
 private:
 	Vector3d position;
@@ -58,6 +60,7 @@ public:
 class TriangleMesh {
 public:
 	uint16_t n_vertex = 0;
+	string obj_name;
 	vector<Vertex> vertices;
 	vector<Edge> edges;
 	vector<Triangle> triangles;

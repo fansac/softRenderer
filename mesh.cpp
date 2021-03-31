@@ -1,13 +1,4 @@
-//#include <Eigen\Dense>
-//#include <vector>
-//#include <unordered_map>
-//#include <string>
-//#include <iostream>
-//#include <fstream>
-//#include <sstream>
-//#include <direct.h>
 #include "mesh.h"
-
 
 using namespace std;
 using namespace Eigen;
@@ -19,22 +10,27 @@ Vertex::Vertex(double x, double y, double z) : position(x, y, z) {};
 double Vertex::getX() { return this->position[0]; }
 double Vertex::getY() { return this->position[1]; }
 double Vertex::getZ() { return this->position[2]; }
-Vector3d Vertex::getPos() { return this->position; }
-Vector3d Vertex::getNormal() { return this->normal; }
+Vector3d Vertex::get_position() { return this->position; }
+Vector3d Vertex::get_normal() { return this->normal; }
+Vector3d Vertex::get_color() { return this->color;  }
 
 void Vertex::setX(double x) { this->position[0] = x; }
 void Vertex::setY(double y) { this->position[1] = y; }
 void Vertex::setZ(double z) { this->position[2] = z; }
-void Vertex::setPosition(Vector3d new_position) { this->position = new_position; }
-void Vertex::setNormal(Vector3d n) { this->normal = n; }
-
+void Vertex::set_position(Vector3d new_position) { this->position = new_position; }
+void Vertex::set_normal(Vector3d n) { this->normal = n; }
+void Vertex::set_color(Vector3d c) { this->color = c;  }
 
 // class Triangle
-Triangle::Triangle() = default;
+Triangle::Triangle() {
+	memset(this->v, UINT16_MAX, 3 * sizeof(uint16_t));
+	memset(this->e_nbr, UINT16_MAX, 3 * sizeof(uint16_t));
+	memset(this->n, UINT16_MAX, 3 * sizeof(uint16_t));
+};
 
 
 // class Edge
-Edge::Edge() = default;
+Edge::Edge() : t_index(UINT16_MAX), i(UINT16_MAX) {};
 Edge::Edge(uint16_t index, uint16_t t_i) : t_index(t_i), i(index) {};
 
 
@@ -48,7 +44,8 @@ void TriangleMesh::add_vertex(double x, double y, double z) {
 
 void TriangleMesh::add_normal(double x, double y, double z) { this->normals.emplace_back(x, y, z); }
 
-void TriangleMesh::add_triangle(vector<uint16_t> v_index, vector<uint16_t> vt, vector<uint16_t> vn) { // counterclockwise
+void TriangleMesh::add_triangle(vector<uint16_t> v_index, vector<uint16_t> vt, vector<uint16_t> vn) { 
+	// counterclockwise
 	for (unsigned int i = 0; i < 3; ++i) assert(v_index[i] < this->vertices.size());
 	this->triangles.emplace_back();
 	auto t_iter = this->triangles.end() - 1;
@@ -57,7 +54,7 @@ void TriangleMesh::add_triangle(vector<uint16_t> v_index, vector<uint16_t> vt, v
 		t_iter->v[i] = v_index[i];
 		t_iter->n[i] = vn[i];
 		this->edges.emplace_back(i, this->triangles.size() - 1);
-		//t_iter->e[i] = this->edges.size() - 1;
+
 		auto v_iter = this->vertices.begin() + v_index[i];
 		if (v_iter->e_index == UINT16_MAX) {
 			v_iter->e_index = this->edges.size() - 1;
@@ -126,6 +123,7 @@ tuple<vector<uint16_t>, vector<uint16_t>, vector<uint16_t>> read_face_element_li
 
 
 void read_mesh_from_obj_file(TriangleMesh &mesh, const string file_path) {
+	mesh.obj_name = find_file_name(file_path);
 	ifstream f_in(file_path);
 	if (!f_in) {
 		cerr << "cannot open file " + file_path + "." << endl;
@@ -166,7 +164,7 @@ void read_mesh_from_obj_file(TriangleMesh &mesh, const string file_path) {
 	unsigned int i = 0;
 	for (auto iter = mesh.vertices.begin(); iter != mesh.vertices.end(); ++iter) {
 		cout << "vertex " << i++ << endl;
-		cout << iter->getPos() << endl;
-		cout << iter->getNormal() << endl;
+		cout << iter->get_position() << endl;
+		cout << iter->get_normal() << endl;
 	}
 }
