@@ -1,9 +1,11 @@
-﻿#include <opencv2/opencv.hpp>
-#include <opencv2/highgui/highgui_c.h>
-#include <iostream>
+﻿#include <iostream>
 #include <string>
 #include <vector>
+#include <direct.h>
 #include <Eigen\Dense>
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui_c.h>
+#include "mesh.h"
 #include "util.h"
 
 using namespace std;
@@ -208,11 +210,17 @@ void test_draw_line() {
 
 int main(int argc, char** argv){
 	assert(WINDOW_WIDTH > 0 && WINDOW_WIDTH <= 1920 && WINDOW_HEIGHT > 0 && WINDOW_HEIGHT <= 1080);
+	cout << "main start!" << endl;
+	char pwd[100];
+	auto null_arg = _getcwd(pwd, 100);
+	system("pause");
 
+	TriangleMesh mesh;
+	string file_name = "cube.obj";
+	read_mesh_from_obj_file(mesh, file_name);
 	//string file_path = "E:\\softRenderer\\SoftRenderer\\fire1.png";
 	//cout << file_path << endl;
 	//vector<Vector3d> canvas(WINDOW_WIDTH * WINDOW_HEIGHT, Vector3d(0, 0, 0));
-	test_draw_line();
 	//draw_line(canvas, 20, 20, 49, 49, Vector3d(0, 255, 255));
 	//set_pixel(canvas, 1, 1, Vector3d(0, 0, 255));
 	//Mat img(WINDOW_HEIGHT, WINDOW_WIDTH, CV_64FC3, canvas.data());
@@ -240,6 +248,7 @@ int main(int argc, char** argv){
 	//cv::imshow("Window", img); //显示图像
 	//cv::waitKey();
 	//system("pause");
-	
+	cout << "main end!" << endl;
 	return 0;
 }
+
