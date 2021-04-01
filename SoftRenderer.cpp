@@ -12,8 +12,8 @@ using namespace std;
 using namespace cv;
 using namespace Eigen;
 
-const size_t WINDOW_WIDTH = 640;
-const size_t WINDOW_HEIGHT = 480;
+const size_t WINDOW_WIDTH = 50;
+const size_t WINDOW_HEIGHT = 50;
 const double EPSON = 1E-5;
 
 
@@ -28,8 +28,7 @@ void simple_shade(TriangleMesh& mesh) {
 	mesh.vertices[2].set_color({ 0, 0, 255 });
 }
 
-void render_obj(TriangleMesh& mesh) {
-	vector<Vector3d> canvas(WINDOW_WIDTH * WINDOW_HEIGHT, Vector3d(0, 0, 0));
+void render_triangle(TriangleMesh& mesh, vector<Vector3d>& canvas) {
 	for (auto iter = mesh.triangles.begin(); iter != mesh.triangles.end(); ++iter) {
 		auto a = mesh.vertices[iter->v[0]].get_position();
 		auto b = mesh.vertices[iter->v[1]].get_position();
@@ -45,20 +44,19 @@ void render_obj(TriangleMesh& mesh) {
 		int z = 0;
 		for (unsigned int i = 90; i < 410; ++i) {
 			for (unsigned int j = 90; j < 410; ++j) {
-			
 				unsigned int k = 0;
-
 				Vector3d p(i, j, k);
 				
 				auto n_a = (c - b).cross(p - b);
 				auto n_b = (a - c).cross(p - c);
-				
+				auto n_c = (b - a).cross(p - a);
+
 				double alpha = n.dot(n_a) / n_2;
 				double beta = n.dot(n_b) / n_2;
-				double gamma = 1.0 - alpha - beta;
-				if (alpha >= -EPSON && alpha <= 1+ EPSON && beta >= -EPSON && beta <= 1 + EPSON && gamma >= -EPSON && gamma <= 1 + EPSON) {
+				//double gamma = 1.0 - alpha - beta;
+				double gamma = n.dot(n_c) / n_2;
+				if (alpha > 0 && beta > 0  && gamma > 0) {
 					auto color = alpha * c_a + beta * c_b + gamma * c_c;
-					//cout << z++ << " " << color(0) << " " << color(1) << " " << color(2) << endl;
 					set_pixel(canvas, p(0), p(1), color);
 				}
 				
@@ -66,30 +64,144 @@ void render_obj(TriangleMesh& mesh) {
 		}
 		
 	}
+}
 
-	Mat img(WINDOW_HEIGHT, WINDOW_WIDTH, CV_64FC3, canvas.data());
-	img.convertTo(img, CV_8UC3, 1.0f);
-	cv::cvtColor(img, img, cv::COLOR_RGB2BGR);
-	// CV_WINDOW_NORMAL
-	namedWindow("test_draw_line", CV_WINDOW_NORMAL);
-	imshow("test_draw_line", img);
-	waitKey();
-	destroyWindow("test_draw_line");
+void test_triangle_rasterization(vector<Vector3d>& canvas) {
+	TriangleMesh mesh;
+	string file_name = "triangle.obj";
+	read_mesh_from_obj_file(mesh, file_name);
+	simple_shade(mesh);
+	render_triangle(mesh, canvas);
+}
+
+
+
+
+Eigen::Matrix4d set_viewport_matirx(double n_x, double n_y) {
+	Eigen::Matrix4d M_vp;
+	M_vp << n_x / 2, 0, 0, (n_x - 1) / 2,
+		0, n_y / 2, 0, (n_y - 1) / 2,
+		0, 0, 1, 0,
+		0, 0, 0, 1;
+
+	return M_vp;
+}
+
+
+struct orthographic_view_volume {
+	double l;
+	double r;
+	double b;
+	double t;
+	double n;
+	double f;
+};
+
+
+Eigen::Matrix4d set_orthographic_projection_matrix(double l, double r, double b, double t, double f, double n) {
+	Eigen::Matrix4d M_orth;
+	M_orth << 2 / (r - l), 0, 0, -(r + l) / (r - l),
+		0, 2 / (t - b), 0, -(t + b) / (t - b),
+		0, 0, 2 / (n - f), -(n + f) / (n - f),
+		0, 0, 0, 1;
+
+	return M_orth;
+}
+
+Eigen::Matrix4d set_camera_tranformation_matrix(Eigen::Vector3d e, Eigen::Vector3d g, Eigen::Vector3d t) {
+	// param: e - eye position 
+	// param: g - gaze direction
+	// param: t - view-up vector
+
+	Eigen::Vector3d w = -g.normalized();
+	Eigen::Vector3d u = (t.cross(w)).normalized();
+	Eigen::Vector3d v = w.cross(u);
+
+	cout << "w : " << endl << w << endl;
+	cout << "u : " << endl << w << endl;
+	cout << "v : " << endl << w << endl;
+
+	Eigen::Matrix4d M_e_t;
+	M_e_t << 1, 0, 0, -e(0),
+			 0, 1, 0, -e(1),
+		     0, 0, 1, -e(2),
+		     0, 0, 0, 1;
+
+	Eigen::Matrix4d M_uvw;
+	M_uvw << u(0), u(1), u(2), 0,
+		     v(0), v(1), v(2), 0,
+		     w(0), w(1), w(2), 0,
+		     0, 0, 0, 1;
+
+	Eigen::Matrix4d M_cam = M_uvw * M_e_t;
+
+	return M_cam;
+}
+
+void test_matrix(vector<Vector3d> &canvas) {
+	double n_x = WINDOW_WIDTH;
+	double n_y = WINDOW_HEIGHT;
+	auto M_vp = set_viewport_matirx(n_x, n_y);
+
+	// orthographic
+	double r = 50, l = -r;
+	double t = 50, b = -t;
+	double n = -0.1, f = -50;
+
+	auto M_orth = set_orthographic_projection_matrix(l, r, b, t, f, n);
+
+	Eigen::Vector3d eye_point = { 0, 0, 5 };
+	Eigen::Vector3d gaze = { -1, -1, -1 };
+	Eigen::Vector3d view_up = { -1, -1, 0 };
+	auto M_cam = set_camera_tranformation_matrix(eye_point, gaze, view_up);
+
+	Eigen::Matrix4d M = M_vp * M_orth * M_cam;
+	cout << " M_vp : " << endl;
+	cout << M_vp << endl;
+
+	cout << " M_orth : " << endl;
+	cout << M_orth << endl;
+
+	cout << " M_cam : " << endl;
+	cout << M_cam << endl;
+
+	cout << " M : " << endl;
+	cout << M << endl;
+	Vector3d v0 = { 0.0, 0.0, -20 };
+	Vector3d v1 = { 0.0, -20.0, 0 };
+	Vector3d v2 = { -20.0, 0.0, 0 };
+	auto p_a = M * v0.homogeneous();
+	auto p_b = M * v1.homogeneous();
+	auto p_c = M * v2.homogeneous();
+	cout << "a " << p_a(0) << " " << p_a(1) << " " << p_a(2) << " " << p_a(3) << endl;
+	cout << "b " << p_b(0) << " " << p_b(1) << " " << p_b(2) << " " << p_b(3) << endl;
+	cout << "c " << p_c(0) << " " << p_c(1) << " " << p_c(2) << " " << p_c(3) << endl;
+	draw_line(canvas, p_a(0), p_a(1), p_b(0), p_b(1), {0, 0, 255});
+	draw_line(canvas, p_b(0), p_b(1), p_c(0), p_c(1), { 0, 0, 255 });
+	draw_line(canvas, p_c(0), p_c(1), p_a(0), p_a(1), { 0, 0, 255 });
 }
 
 int main(int argc, char** argv){
 	assert(WINDOW_WIDTH > 0 && WINDOW_WIDTH <= 1920 && WINDOW_HEIGHT > 0 && WINDOW_HEIGHT <= 1080);
+	vector<Vector3d> canvas(WINDOW_WIDTH * WINDOW_HEIGHT, Vector3d(0, 0, 0));
 	cout << "main start!" << endl;
 	char pwd[100];
 	auto null_arg = _getcwd(pwd, 100);
 	system("pause");
+	// main test
+	
+	//test_triangle_rasterization(canvas);
+	test_matrix(canvas);
 
-	TriangleMesh mesh;
-	string file_name = "triangle.obj";
-	read_mesh_from_obj_file(mesh, file_name);
-	Triangle t = mesh.triangles[0];
-	simple_shade(mesh);
-	render_obj(mesh);
+	// show image
+	Mat img(WINDOW_HEIGHT, WINDOW_WIDTH, CV_64FC3, canvas.data());
+	img.convertTo(img, CV_8UC3, 1.0f);
+	cv::cvtColor(img, img, cv::COLOR_RGB2BGR);
+	// CV_WINDOW_NORMAL
+	namedWindow("test_draw_line");
+	imshow("test_draw_line", img);
+	waitKey();
+	destroyWindow("test_draw_line");
 	cout << "main end!" << endl;
 	system("pause");
 
@@ -100,7 +212,7 @@ int main(int argc, char** argv){
 void set_pixel(vector<Vector3d>& canvas, int x, int y, Vector3d color) {
 	assert(canvas.size() == WINDOW_WIDTH * WINDOW_HEIGHT && x >= 0 && x < WINDOW_WIDTH&& y >= 0 && y < WINDOW_HEIGHT);
 	assert(y * WINDOW_WIDTH + x < WINDOW_WIDTH* WINDOW_HEIGHT);
-	canvas[y * WINDOW_WIDTH + x] = color;
+	canvas[ (WINDOW_HEIGHT - 1 - y) * WINDOW_WIDTH + x] = color;
 }
 
 

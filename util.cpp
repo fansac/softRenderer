@@ -110,3 +110,4 @@ void open_image(void){
 	//cv::waitKey();
 	//system("pause");
 }
+
