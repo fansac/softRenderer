@@ -2,22 +2,18 @@
 //#include <cmath>
 #include <string>
 #include <vector>
-#include <direct.h>
-#include <Eigen\Dense>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui_c.h>
-#include "mesh.h"
-#include "util.h"
+#include <Eigen\Dense>
 
-constexpr auto PI = 3.1415926535897932384626;
+#include "mesh.h"
+#include "util.hpp"
+#include "global.h"
 
 using namespace std;
 using namespace cv;
 using namespace Eigen;
 
-const size_t WINDOW_WIDTH = 700;
-const size_t WINDOW_HEIGHT = 700;
-const double EPSON = 1E-5;
 
 
 void set_pixel(vector<Vector3d>& canvas, int x, int y, Vector3d color);
@@ -204,83 +200,9 @@ void test_matrix(vector<Vector3d> &canvas) {
 	draw_line(canvas, p_c(0), p_c(1), p_a(0), p_a(1), { 0, 0, 255 });
 }
 
-int main(int argc, char** argv){
-	assert(WINDOW_WIDTH > 0 && WINDOW_WIDTH <= 1920 && WINDOW_HEIGHT > 0 && WINDOW_HEIGHT <= 1080);
-	cout << "tan " << tan(45.0 / 180.0 * 3.1415926) << endl;
-	vector<Vector3d> canvas(WINDOW_WIDTH * WINDOW_HEIGHT, Vector3d(0, 0, 0));
-	cout << "main start!" << endl;
-	char pwd[100];
-	auto null_arg = _getcwd(pwd, 100);
-	system("pause");
-	// main test
-	
-	//test_triangle_rasterization(canvas);
-	test_matrix(canvas);
-
-	// show image
-	Mat img(WINDOW_HEIGHT, WINDOW_WIDTH, CV_64FC3, canvas.data());
-	img.convertTo(img, CV_8UC3, 1.0f);
-	cv::cvtColor(img, img, cv::COLOR_RGB2BGR);
-	// CV_WINDOW_NORMAL
-	namedWindow("test_draw_line");
-	imshow("test_draw_line", img);
-	waitKey();
-	destroyWindow("test_draw_line");
-	cout << "main end!" << endl;
-	system("pause");
-
-	return 0;
-}
 
 
-void set_pixel(vector<Vector3d>& canvas, int x, int y, Vector3d color) {
-	assert(canvas.size() == WINDOW_WIDTH * WINDOW_HEIGHT && x >= 0 && x < WINDOW_WIDTH&& y >= 0 && y < WINDOW_HEIGHT);
-	assert(y * WINDOW_WIDTH + x < WINDOW_WIDTH* WINDOW_HEIGHT);
-	canvas[ (WINDOW_HEIGHT - 1 - y) * WINDOW_WIDTH + x] = color;
-}
 
-
-int sign_Int(int x, int y) { // (x - y) < 0 ?
-	if (x == y)     return 0;
-	else if (x > y) return -1;
-	else            return 1;
-}
-
-
-void draw_line(vector<Vector3d>& canvas, int x0, int y0, int x1, int y1, Vector3d color) {
-	// Bresenham algorithm https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-	assert(canvas.size() == WINDOW_WIDTH * WINDOW_HEIGHT && x1 >= 0 && x1 < WINDOW_WIDTH&& y1 >= 0
-		&& y1 < WINDOW_HEIGHT&& x0 >= 0 && x0 < WINDOW_WIDTH&& y0 >= 0 && y0 < WINDOW_HEIGHT);
-	int sign_x = sign_Int(x0, x1);
-	int sign_y = sign_Int(y0, y1);
-	if (x0 == x1) {
-		for (int y = y0; y != y1; y += sign_y) set_pixel(canvas, x0, y, color);
-		set_pixel(canvas, x1, y1, color);
-		return;
-	}
-	if (y0 == y1) {
-		for (int x = x0; x != x1; x += sign_x) set_pixel(canvas, x, y0, color);
-		set_pixel(canvas, x1, y1, color);
-		return;
-	}
-
-	int d_x = sign_x * (x1 - x0);
-	int d_y = sign_y * (y0 - y1);
-	int err = d_x + d_y;
-	int x = x0, y = y0;
-	do {
-		set_pixel(canvas, x, y, color);
-		int e2 = 2 * err;
-		if (e2 >= d_y) {
-			err += d_y;
-			x += sign_x;
-		}
-		if (e2 <= d_x) {
-			err += d_x;
-			y += sign_y;
-		}
-	} while (!(x == x1 && y == y1));
-}
 
 
 int implicit_line_equation(int x, int y, int x0, int y0, int x1, int y1) {

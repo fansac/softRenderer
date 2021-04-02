@@ -123,7 +123,7 @@ tuple<vector<uint16_t>, vector<uint16_t>, vector<uint16_t>> read_face_element_li
 
 
 void read_mesh_from_obj_file(TriangleMesh &mesh, const string file_path) {
-	mesh.obj_name = find_file_name(file_path);
+	mesh.obj_name = util_rd::find_file_name(file_path);
 	ifstream f_in(file_path);
 	if (!f_in) {
 		cerr << "cannot open file " + file_path + "." << endl;

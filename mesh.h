@@ -6,7 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include <Eigen\Dense>
-#include "util.h"
+#include "util.hpp"
 
 using namespace std;
 using namespace Eigen;
