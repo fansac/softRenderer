@@ -1,4 +1,5 @@
 ﻿#include <iostream>
+//#include <cmath>
 #include <string>
 #include <vector>
 #include <direct.h>
@@ -8,12 +9,14 @@
 #include "mesh.h"
 #include "util.h"
 
+constexpr auto PI = 3.1415926535897932384626;
+
 using namespace std;
 using namespace cv;
 using namespace Eigen;
 
-const size_t WINDOW_WIDTH = 50;
-const size_t WINDOW_HEIGHT = 50;
+const size_t WINDOW_WIDTH = 700;
+const size_t WINDOW_HEIGHT = 700;
 const double EPSON = 1E-5;
 
 
@@ -108,6 +111,17 @@ Eigen::Matrix4d set_orthographic_projection_matrix(double l, double r, double b,
 	return M_orth;
 }
 
+
+Eigen::Matrix4d set_perspective_projection_matrix(double l, double r, double b, double t, double f, double n) {
+	Eigen::Matrix4d M_per;
+	M_per << 2 * n / (r - l), 0, (l + r) / (l - r), 0,
+		0, 2 * n / (t - b), (b + t) / (b - t), 0,
+		0, 0, (f + n) / (n - f), 2 * f * n / (f - n),
+		0, 0, 1, 0;
+	return M_per;
+}
+
+
 Eigen::Matrix4d set_camera_tranformation_matrix(Eigen::Vector3d e, Eigen::Vector3d g, Eigen::Vector3d t) {
 	// param: e - eye position 
 	// param: g - gaze direction
@@ -138,44 +152,53 @@ Eigen::Matrix4d set_camera_tranformation_matrix(Eigen::Vector3d e, Eigen::Vector
 	return M_cam;
 }
 
+Vector2d homo_to_v2(const Vector4d homo) {
+	assert(abs(homo(3)) > EPSON);
+	return { homo(0) / homo(3), homo(1) / homo(3) };
+}
+
 void test_matrix(vector<Vector3d> &canvas) {
 	double n_x = WINDOW_WIDTH;
 	double n_y = WINDOW_HEIGHT;
 	auto M_vp = set_viewport_matirx(n_x, n_y);
 
-	// orthographic
-	double r = 50, l = -r;
-	double t = 50, b = -t;
+	// perspective
+	double theta = 45;
 	double n = -0.1, f = -50;
+	double t = abs(n) * tan(theta / 2 / 180 * PI);
+	double b = -t;
+	double r = (n_x / n_y) * t;
+	double l = -r;
+	cout << "show plane: " << "n = " << n << " t = " << t << " r = " << r << endl;
 
-	auto M_orth = set_orthographic_projection_matrix(l, r, b, t, f, n);
-
+	//auto M_orth = set_orthographic_projection_matrix(l, r, b, t, f, n);
+	auto M_per = set_perspective_projection_matrix(l, r, b, t, f, n);
 	Eigen::Vector3d eye_point = { 0, 0, 5 };
-	Eigen::Vector3d gaze = { -1, -1, -1 };
-	Eigen::Vector3d view_up = { -1, -1, 0 };
+	Eigen::Vector3d gaze = { 0, 0, -1 };
+	Eigen::Vector3d view_up = { -1, 0, 0 };
 	auto M_cam = set_camera_tranformation_matrix(eye_point, gaze, view_up);
 
-	Eigen::Matrix4d M = M_vp * M_orth * M_cam;
+	Eigen::Matrix4d M = M_vp * M_per * M_cam;
 	cout << " M_vp : " << endl;
 	cout << M_vp << endl;
 
-	cout << " M_orth : " << endl;
-	cout << M_orth << endl;
+	cout << " M_per : " << endl;
+	cout << M_per << endl;
 
 	cout << " M_cam : " << endl;
 	cout << M_cam << endl;
 
 	cout << " M : " << endl;
 	cout << M << endl;
-	Vector3d v0 = { 0.0, 0.0, -20 };
-	Vector3d v1 = { 0.0, -20.0, 0 };
-	Vector3d v2 = { -20.0, 0.0, 0 };
-	auto p_a = M * v0.homogeneous();
-	auto p_b = M * v1.homogeneous();
-	auto p_c = M * v2.homogeneous();
-	cout << "a " << p_a(0) << " " << p_a(1) << " " << p_a(2) << " " << p_a(3) << endl;
-	cout << "b " << p_b(0) << " " << p_b(1) << " " << p_b(2) << " " << p_b(3) << endl;
-	cout << "c " << p_c(0) << " " << p_c(1) << " " << p_c(2) << " " << p_c(3) << endl;
+	Vector3d v0 = { 2.0, 0.0, -2. };
+	Vector3d v1 = { 0.0, 2.0, -2. };
+	Vector3d v2 = { -2.0, 0.0, -2. };
+	auto p_a = homo_to_v2(M * v0.homogeneous());
+	auto p_b = homo_to_v2(M * v1.homogeneous());
+	auto p_c = homo_to_v2(M * v2.homogeneous());
+	cout << "a " << p_a(0) << " " << p_a(1) << endl;
+	cout << "b " << p_b(0) << " " << p_b(1) << endl;
+	cout << "c " << p_c(0) << " " << p_c(1) << endl;
 	draw_line(canvas, p_a(0), p_a(1), p_b(0), p_b(1), {0, 0, 255});
 	draw_line(canvas, p_b(0), p_b(1), p_c(0), p_c(1), { 0, 0, 255 });
 	draw_line(canvas, p_c(0), p_c(1), p_a(0), p_a(1), { 0, 0, 255 });
@@ -183,6 +206,7 @@ void test_matrix(vector<Vector3d> &canvas) {
 
 int main(int argc, char** argv){
 	assert(WINDOW_WIDTH > 0 && WINDOW_WIDTH <= 1920 && WINDOW_HEIGHT > 0 && WINDOW_HEIGHT <= 1080);
+	cout << "tan " << tan(45.0 / 180.0 * 3.1415926) << endl;
 	vector<Vector3d> canvas(WINDOW_WIDTH * WINDOW_HEIGHT, Vector3d(0, 0, 0));
 	cout << "main start!" << endl;
 	char pwd[100];
