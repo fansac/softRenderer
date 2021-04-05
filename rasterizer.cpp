@@ -85,9 +85,7 @@ void rst::Rasterizer::draw_triangle(Pixel p0, Pixel p1, Pixel p2) {
 			auto beta = std::get<1>(barycentric_coordinates);
 			auto gamma = std::get<2>(barycentric_coordinates);
 			if (alpha > 0 && beta > 0 && gamma > 0) {
-				std::cout << "alpha + beta + gamma: " << (alpha + beta + gamma) << std::endl;
-				auto c = alpha * p0.c + beta * p1.c + beta * p2.c;
-				std::cout << "color" << std::endl << c << std::endl;
+				auto c = alpha * p0.c + beta * p1.c + gamma * p2.c;
 				draw_pixel({ x, y, c });
 			}
 

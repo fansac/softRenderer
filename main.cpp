@@ -36,7 +36,7 @@ int main(void) {
 	
 	Eigen::Vector3d eye_point = { 0, 0, 5 };
 	Eigen::Vector3d gaze = { 0, 0, -1 };
-	Eigen::Vector3d view_up = { -1, 0, 0 };
+	Eigen::Vector3d view_up = { 0, 1, 0 };
 
 	r.set_camera(eye_point, gaze, view_up);
 	r.calculate_matrix();
