@@ -36,7 +36,7 @@ Edge::Edge(uint16_t index, uint16_t t_i) : t_index(t_i), i(index) {};
 
 // class TriangleMesh
 TriangleMesh::TriangleMesh() = default;
-	
+
 void TriangleMesh::add_vertex(double x, double y, double z) {
 	assert(this->vertices.size() < UINT16_MAX);
 	this->vertices.emplace_back(x, y, z);
@@ -44,7 +44,9 @@ void TriangleMesh::add_vertex(double x, double y, double z) {
 
 void TriangleMesh::add_normal(double x, double y, double z) { this->normals.emplace_back(x, y, z); }
 
-void TriangleMesh::add_triangle(vector<uint16_t> v_index, vector<uint16_t> vt, vector<uint16_t> vn) { 
+void TriangleMesh::add_color(double c0, double c1, double c2) { this->colors.emplace_back(c0, c1, c2); }
+
+void TriangleMesh::add_triangle(vector<uint16_t> v_index, vector<uint16_t> vt, vector<uint16_t> vn) {
 	// counterclockwise
 	for (unsigned int i = 0; i < 3; ++i) assert(v_index[i] < this->vertices.size());
 	this->triangles.emplace_back();
@@ -53,6 +55,7 @@ void TriangleMesh::add_triangle(vector<uint16_t> v_index, vector<uint16_t> vt, v
 	for (uint16_t i = 0; i < 3; ++i) {
 		t_iter->v[i] = v_index[i];
 		t_iter->n[i] = vn[i];
+		t_iter->c[i] = vt[i];
 		this->edges.emplace_back(i, this->triangles.size() - 1);
 
 		auto v_iter = this->vertices.begin() + v_index[i];
@@ -83,7 +86,7 @@ vector<uint16_t> TriangleMesh::find_triangles_index_of_vertex(uint16_t v_i) { //
 		e = this->edges[this->triangles[t_i].e_nbr[i]];
 		t_i = e.t_index;
 		i = e.i;
-		i = (i + 1) % 3; 
+		i = (i + 1) % 3;
 	} while (t_i != t_start);
 	return triangles_index;
 }
@@ -146,6 +149,11 @@ void read_mesh_from_obj_file(TriangleMesh &mesh, const string file_path) {
 			double x, y, z;
 			s_in >> x >> y >> z;
 			mesh.add_normal(x, y, z);
+		}
+		if (head == "vt") {
+			double d0, d1, d2;;
+			s_in >> d0 >> d1 >> d2;
+			mesh.add_color(d0, d1, d2);
 		}
 		else if (head == "f") {
 			auto v_info = read_face_element_line(s_in);

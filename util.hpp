@@ -4,7 +4,8 @@
 
 #include <fstream>
 #include <string>
-
+#include <vector>
+#include <Eigen/Dense>
 #include "global.h"
 
 namespace util_rd {
@@ -28,6 +29,10 @@ namespace util_rd {
 
 	bool is_file_exists_ifstream(const std::string name);
 	std::string find_file_name(const std::string file_path);
+	Eigen::Vector2d homo_to_v2(const Eigen::Vector4d homo);
+	std::pair<size_t, size_t> get_range_of_three(const size_t a, const size_t b, const size_t c);
+	std::tuple<double, double, double> compute_barycentric_2D(double x, double y, std::vector<Eigen::Vector2d> v);
+	
 }
 
 

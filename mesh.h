@@ -45,6 +45,7 @@ public:
 	uint16_t v[3];
 	uint16_t e_nbr[3];
 	uint16_t n[3];
+	uint16_t c[3];
 
 	Triangle();
 };
@@ -65,6 +66,7 @@ public:
 	vector<Edge> edges;
 	vector<Triangle> triangles;
 	vector<Vector3d> normals;
+	std::vector<Eigen::Vector3d> colors;
 
 	struct pair_hash {
 		size_t operator()  (const pair<uint16_t, uint16_t>& p) const
@@ -81,6 +83,7 @@ public:
 
 	void add_vertex(double x, double y, double z);
 	void add_normal(double x, double y, double z);
+	void add_color(double x, double y, double z);
 	void add_triangle(vector<uint16_t> v_index, vector<uint16_t> vt, vector<uint16_t> vn);
 	vector<uint16_t> find_triangles_index_of_vertex(uint16_t v_i);
 };
