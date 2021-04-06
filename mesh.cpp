@@ -73,6 +73,7 @@ void TriangleMesh::add_triangle(vector<uint16_t> v_index, vector<uint16_t> vt, v
 			this->triangles[edge_neighbour.t_index].e_nbr[edge_neighbour.i] = this->edges.size() - 1;
 		}
 	}
+	t_iter->calculate_normal(this->vertices[t_iter->v[0]].get_position(), this->vertices[t_iter->v[1]].get_position(), this->vertices[t_iter->v[2]].get_position());
 }
 
 vector<uint16_t> TriangleMesh::find_triangles_index_of_vertex(uint16_t v_i) { // clockwise
@@ -163,7 +164,25 @@ void read_mesh_from_obj_file(TriangleMesh &mesh, const string file_path) {
 			mesh.add_triangle(v, vt, vn);
 		}
 	}
+	mesh.calculate_average_normal_of_vertices();
 	f_in.close();
 	mesh.e_index_map.clear();
 	assert(static_cast<size_t>(mesh.n_vertex) == mesh.vertices.size());
+}
+
+
+void Triangle::calculate_normal(Eigen::Vector3d point0, Eigen::Vector3d point1, Eigen::Vector3d point2) {
+	this->normal = (point1 - point0).cross(point2 - point1).normalized();
+}
+
+
+void TriangleMesh::calculate_average_normal_of_vertices() {
+	for (uint16_t i = 0; i < this->n_vertex; ++i) {
+		auto triangles_index_list = this->find_triangles_index_of_vertex(i);
+		Eigen::Vector3d average = { 0, 0, 0 };
+		for (auto index : triangles_index_list) {
+			average += this->triangles[index].normal;
+		}
+		this->vertices[i].set_normal(average.normalized());
+	}
 }

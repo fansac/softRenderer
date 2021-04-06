@@ -46,16 +46,19 @@ public:
 	uint16_t e_nbr[3];
 	uint16_t n[3];
 	uint16_t c[3];
+	Eigen::Vector3d normal;
 
 	Triangle();
+	void calculate_normal(Eigen::Vector3d point0, Eigen::Vector3d point1, Eigen::Vector3d point2);
 };
 
 class Edge { // th i_th edge of triangle
 public:
-	Edge();
-	Edge(uint16_t index, uint16_t t_i);
 	uint16_t t_index;
 	uint16_t i; // in {0, 1, 2}
+	
+	Edge();
+	Edge(uint16_t index, uint16_t t_i);
 };
 
 class TriangleMesh {
@@ -86,6 +89,7 @@ public:
 	void add_color(double x, double y, double z);
 	void add_triangle(vector<uint16_t> v_index, vector<uint16_t> vt, vector<uint16_t> vn);
 	vector<uint16_t> find_triangles_index_of_vertex(uint16_t v_i);
+	void calculate_average_normal_of_vertices();
 };
 
 

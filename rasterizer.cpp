@@ -13,10 +13,19 @@ rst::Rasterizer::Rasterizer(size_t width, size_t height) : w(width), h(height) {
 //	this->h = height;
 //};
 
-uint16_t rst::Rasterizer::to_z_buffer_value(double z) {
-	double z_value = ((z - this->near) / (this->far - this->near) * static_cast<double>(UINT16_MAX));
+uint32_t rst::Rasterizer::to_z_buffer_value(double z) {
+	double z_value = ((z - this->near) / (this->far - this->near) * static_cast<double>(UINT32_MAX));
 	assert(z_value > 0);
 	return z_value;
+}
+
+bool rst::Rasterizer::compare_pixel_in_z_buffer(size_t x, size_t y, uint32_t z) {
+	bool is_near = false;
+	if (z <= z_buffer[y * w + x]) {
+		is_near = true;
+		z_buffer[y * w + x] = z;
+	}
+	return is_near;
 }
 
 std::pair<size_t, size_t> rst::Rasterizer::get_screen_size() {
@@ -24,6 +33,7 @@ std::pair<size_t, size_t> rst::Rasterizer::get_screen_size() {
 }
 
 std::vector<Eigen::Vector3d> rst::Rasterizer::get_canvas() { return canvas; }
+
 
 Eigen::Matrix4d rst::Rasterizer::get_M() {
 	return this->M_trans;
@@ -40,14 +50,7 @@ std::vector<Eigen::Vector3d> rst::Rasterizer::canvas_2_screen() {
 	return screen;
 }
 
-bool rst::Rasterizer::compare_pixel_in_z_buffer(size_t x, size_t y, uint16_t z) {
-	bool is_near = false;
-	if (z <= z_buffer[y * w + x]) {
-		is_near = true;
-		z_buffer[y * w + x] = z;
-	}
-	return is_near;
-}
+
 
 
 void rst::Rasterizer::draw_pixel(Pixel p) {
@@ -107,7 +110,7 @@ void rst::Rasterizer::draw_triangle(Pixel p0, Pixel p1, Pixel p2) {
 			auto alpha = std::get<0>(barycentric_coordinates);
 			auto beta = std::get<1>(barycentric_coordinates);
 			auto gamma = std::get<2>(barycentric_coordinates);
-			if (alpha > 0 && beta > 0 && gamma > 0) {
+			if (alpha >= 0 && beta >= 0 && gamma >= 0) {
 				auto c = alpha * p0.c + beta * p1.c + gamma * p2.c;
 				uint16_t z = (alpha * p0.z + beta * p1.z + gamma * p2.z);
 				if (compare_pixel_in_z_buffer(x, y, z))

@@ -28,7 +28,7 @@ namespace rst {
 		Rasterizer() = delete;
 		Rasterizer(size_t width, size_t height);
 
-
+		int test_index = 0;
 		//void set_screen_size(size_t width, size_t height);
 		std::pair<size_t, size_t> get_screen_size();
 		std::vector<Eigen::Vector3d> get_canvas();
@@ -42,9 +42,9 @@ namespace rst {
 		void draw_line(Pixel p0, Pixel p1);
 		void draw_triangle(Pixel p0, Pixel p1, Pixel p2);
 		void calculate_matrix();
-		bool compare_pixel_in_z_buffer(size_t x, size_t y, uint16_t z);
+		bool compare_pixel_in_z_buffer(size_t x, size_t y, uint32_t z);
 
-		uint16_t to_z_buffer_value(double z);
+		uint32_t to_z_buffer_value(double z);
 
 	private:
 		size_t w;

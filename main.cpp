@@ -20,65 +20,53 @@ int main(void) {
 	std::cout << "main start" << std::endl;
 	char pwd[100];
 	auto null_arg = _getcwd(pwd, 100);
-	system("pause");
-	
+	std::system("pause");
 	// main test
-	string file_name = "triangle.obj";
+	string file_name = "cube.obj";
 	TriangleMesh mesh;
 	read_mesh_from_obj_file(mesh, file_name);
-	cout << "obj: " << mesh.obj_name << endl;
+	std::cout << "obj: " << mesh.obj_name << endl;
 
-	system("pause");
+	std::system("pause");
 
 	rst::Rasterizer r(WINDOW_WIDTH, WINDOW_HEIGHT);
 	double theta = 45, n = -0.1, f = -50;
 	r.set_view_volume(theta, n, f);
 	
-	Eigen::Vector3d eye_point = { 0, 0, 5 };
-	Eigen::Vector3d gaze = { 0, 0, -1 };
+	Eigen::Vector3d eye_point = { 3, 3, 2 };
+	Eigen::Vector3d gaze = { -1, -1, -1 };
 	Eigen::Vector3d view_up = { 0, 1, 0 };
 
 	r.set_camera(eye_point, gaze, view_up);
 	r.calculate_matrix();
 
+	Eigen::Vector3d light = { -1, -1, -1 };
+	Eigen::Vector3d c_l = { 1.0, 1.0, 1.0 };
+	Eigen::Vector3d c_a = Eigen::Vector3d(10, 10, 10) / 255;
+	Eigen::Vector3d c_p = { 0.7937, 0.7937, 0.7937 };
+	auto direc_light = -(light.normalized());
+	cout << "light: " << direc_light << endl;
+	auto M = r.get_M();
 
-	for (auto iter = mesh.triangles.begin(); iter != mesh.triangles.end(); ++iter) {
-		auto a = mesh.vertices[iter->v[0]].get_position();
-		auto b = mesh.vertices[iter->v[1]].get_position();
-		auto c = mesh.vertices[iter->v[2]].get_position();
 
-		auto c_a = mesh.colors[iter->c[0]];
-		auto c_b = mesh.colors[iter->c[1]];
-		auto c_c = mesh.colors[iter->c[2]];
-
-		auto M = r.get_M();
-		auto p_a = util_rd::homo_to_v3(M * a.homogeneous());
-		auto p_b = util_rd::homo_to_v3(M * b.homogeneous());
-		auto p_c = util_rd::homo_to_v3(M * c.homogeneous());
-
-		rst::Pixel p0(p_a[0], p_a[1], r.to_z_buffer_value(p_a[2]), c_a);
-		rst::Pixel p1(p_b[0], p_b[1], r.to_z_buffer_value(p_b[2]), c_b);
-		rst::Pixel p2(p_c[0], p_c[1], r.to_z_buffer_value(p_c[2]), c_c);
-		
-		r.draw_triangle(p0, p1, p2);
-	}
-
-	system("pause");
+	
 
 	// show image
-	cout << "show image" << endl;
+	std::cout << "show image" << endl;
+	std::system("pause");
 	auto screen = r.canvas_2_screen();
 	Mat img(WINDOW_HEIGHT, WINDOW_WIDTH, CV_64FC3, screen.data());
 	img.convertTo(img, CV_8UC3, 1.0f);
 	cv::cvtColor(img, img, cv::COLOR_RGB2BGR);
 	// CV_WINDOW_NORMAL
-	namedWindow("test_draw_line");
-	imshow("test_draw_line", img);
-	waitKey();
-	destroyWindow("test_draw_line");
+	cv::namedWindow("test_draw_line", CV_WINDOW_NORMAL);
+	cv::imshow("test_draw_line", img);
+	cv::waitKey();
+	cv::imwrite( mesh.obj_name + ".jpg", img);
+	cv::destroyWindow("test_draw_line");
 
-	cout << "main end" << endl;
-	system("pause");
+	std::cout << "main end" << endl;
+	std::system("pause");
 	return 0;
 }
 
