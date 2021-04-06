@@ -13,13 +13,12 @@ namespace rst {
 
 	class Pixel {
 	public:
-		Pixel(size_t x, size_t y, Eigen::Vector3d color) {
-			this->x = x;
-			this->y = y;
-			c = color;
-		}
+		Pixel(size_t pos_x, size_t pos_y, Eigen::Vector3d color) : x(pos_x), y(pos_y), z(UINT16_MAX), c(color) {};
+		Pixel(size_t pos_x, size_t pos_y, uint16_t pos_z, Eigen::Vector3d color) : x(pos_x), y(pos_y), z(pos_z), c(color) {};
+
 		size_t x;
 		size_t y;
+		uint16_t z;
 		Eigen::Vector3d c;
 	};
 	
@@ -43,6 +42,9 @@ namespace rst {
 		void draw_line(Pixel p0, Pixel p1);
 		void draw_triangle(Pixel p0, Pixel p1, Pixel p2);
 		void calculate_matrix();
+		bool compare_pixel_in_z_buffer(size_t x, size_t y, uint16_t z);
+
+		uint16_t to_z_buffer_value(double z);
 
 	private:
 		size_t w;
@@ -56,6 +58,7 @@ namespace rst {
 		Eigen::Matrix4d set_orthographic_projection_matrix(double l, double r, double b, double t, double f, double n);
 		Eigen::Matrix4d set_perspective_projection_matrix(double l, double r, double b, double t, double f, double n);
 		Eigen::Matrix4d set_camera_tranformation_matrix(Eigen::Vector3d e, Eigen::Vector3d g, Eigen::Vector3d t);
+		std::vector<uint16_t>z_buffer;
 	};
 }
 

@@ -1,14 +1,23 @@
 #include "rasterizer.hpp"
 
+
+
 rst::Rasterizer::Rasterizer(size_t width, size_t height) : w(width), h(height) {
 	assert(w <= 1920 && h <= 1080);
 	canvas = std::vector<Eigen::Vector3d>(w * h, Eigen::Vector3d(0, 0, 0));
+	z_buffer = std::vector<uint16_t>(w * h, UINT16_MAX);
 }
 
 //void rst::Rasterizer::set_screen_size(size_t width, size_t height) {
 //	this->w = width;
 //	this->h = height;
 //};
+
+uint16_t rst::Rasterizer::to_z_buffer_value(double z) {
+	double z_value = ((z - this->near) / (this->far - this->near) * static_cast<double>(UINT16_MAX));
+	assert(z_value > 0);
+	return z_value;
+}
 
 std::pair<size_t, size_t> rst::Rasterizer::get_screen_size() {
 	return std::make_pair(w, h);
@@ -30,6 +39,16 @@ std::vector<Eigen::Vector3d> rst::Rasterizer::canvas_2_screen() {
 	}
 	return screen;
 }
+
+bool rst::Rasterizer::compare_pixel_in_z_buffer(size_t x, size_t y, uint16_t z) {
+	bool is_near = false;
+	if (z <= z_buffer[y * w + x]) {
+		is_near = true;
+		z_buffer[y * w + x] = z;
+	}
+	return is_near;
+}
+
 
 void rst::Rasterizer::draw_pixel(Pixel p) {
 	assert(canvas.size() == w * h && p.x < w && p.y < h);
@@ -78,15 +97,23 @@ void rst::Rasterizer::draw_triangle(Pixel p0, Pixel p1, Pixel p2) {
 	auto x_range = util_rd::get_range_of_three(p0.x, p1.x, p2.x);
 	auto y_range = util_rd::get_range_of_three(p0.y, p1.y, p2.y);
 
-	for (auto x = x_range.first; x <= x_range.second; ++x) {
-		for (auto y = y_range.first; y <= y_range.second; ++y) {
+	auto x_min = util_rd::clip(x_range.first, static_cast<size_t>(0), this->w);
+	auto x_max = util_rd::clip(x_range.second, static_cast<size_t>(0), this->w);
+	auto y_min = util_rd::clip(y_range.first, static_cast<size_t>(0), this->h);
+	auto y_max = util_rd::clip(y_range.second, static_cast<size_t>(0), this->h);
+	for (auto x = x_min; x <= x_max; ++x) {
+		for (auto y = y_min; y <= y_max; ++y) {
 			auto barycentric_coordinates = util_rd::compute_barycentric_2D(x, y, { {p0.x, p0.y}, {p1.x, p1.y},{p2.x, p2.y} });
 			auto alpha = std::get<0>(barycentric_coordinates);
 			auto beta = std::get<1>(barycentric_coordinates);
 			auto gamma = std::get<2>(barycentric_coordinates);
 			if (alpha > 0 && beta > 0 && gamma > 0) {
 				auto c = alpha * p0.c + beta * p1.c + gamma * p2.c;
-				draw_pixel({ x, y, c });
+				uint16_t z = (alpha * p0.z + beta * p1.z + gamma * p2.z);
+				if (compare_pixel_in_z_buffer(x, y, z))
+				{
+					draw_pixel({ x, y, c });
+				}
 			}
 
 		}

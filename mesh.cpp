@@ -166,13 +166,4 @@ void read_mesh_from_obj_file(TriangleMesh &mesh, const string file_path) {
 	f_in.close();
 	mesh.e_index_map.clear();
 	assert(static_cast<size_t>(mesh.n_vertex) == mesh.vertices.size());
-	system("pause");
-
-	cout << "mesh: " << endl;
-	unsigned int i = 0;
-	for (auto iter = mesh.vertices.begin(); iter != mesh.vertices.end(); ++iter) {
-		cout << "vertex " << i++ << endl;
-		cout << iter->get_position() << endl;
-		cout << iter->get_normal() << endl;
-	}
 }

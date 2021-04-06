@@ -52,13 +52,13 @@ int main(void) {
 		auto c_c = mesh.colors[iter->c[2]];
 
 		auto M = r.get_M();
-		auto p_a = util_rd::homo_to_v2(M * a.homogeneous());
-		auto p_b = util_rd::homo_to_v2(M * b.homogeneous());
-		auto p_c = util_rd::homo_to_v2(M * c.homogeneous());
+		auto p_a = util_rd::homo_to_v3(M * a.homogeneous());
+		auto p_b = util_rd::homo_to_v3(M * b.homogeneous());
+		auto p_c = util_rd::homo_to_v3(M * c.homogeneous());
 
-		rst::Pixel p0(p_a[0], p_a[1], c_a);
-		rst::Pixel p1(p_b[0], p_b[1], c_b);
-		rst::Pixel p2(p_c[0], p_c[1], c_c);
+		rst::Pixel p0(p_a[0], p_a[1], r.to_z_buffer_value(p_a[2]), c_a);
+		rst::Pixel p1(p_b[0], p_b[1], r.to_z_buffer_value(p_b[2]), c_b);
+		rst::Pixel p2(p_c[0], p_c[1], r.to_z_buffer_value(p_c[2]), c_c);
 		
 		r.draw_triangle(p0, p1, p2);
 	}
