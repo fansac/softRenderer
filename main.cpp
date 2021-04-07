@@ -20,6 +20,7 @@ int main(void) {
 	std::cout << "main start" << std::endl;
 	char pwd[100];
 	auto null_arg = _getcwd(pwd, 100);
+
 	std::system("pause");
 	// main test
 	string file_name = "cube.obj";
@@ -33,8 +34,8 @@ int main(void) {
 	double theta = 45, n = -0.1, f = -50;
 	r.set_view_volume(theta, n, f);
 	
-	Eigen::Vector3d eye_point = { 3, 3, 2 };
-	Eigen::Vector3d gaze = { -1, -1, -1 };
+	Eigen::Vector3d eye_point = { 0, 0, 5 };
+	Eigen::Vector3d gaze = { 0, 0, -1 };
 	Eigen::Vector3d view_up = { 0, 1, 0 };
 
 	r.set_camera(eye_point, gaze, view_up);
@@ -44,8 +45,8 @@ int main(void) {
 
 	// shading
 	std::cout << "shading" << std::endl;
-	gouraud_shading(mesh, r, eye_point, M);
-	
+	//gouraud_shading(mesh, r, eye_point, M);
+	phong_shading(mesh, r);
 
 	// show image
 	std::cout << "show image" << endl;

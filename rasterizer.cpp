@@ -36,7 +36,7 @@ std::vector<Eigen::Vector3d> rst::Rasterizer::get_canvas() { return canvas; }
 
 
 Eigen::Matrix4d rst::Rasterizer::get_M() {
-	return this->M_trans;
+	return this->mvp;
 }
 
 
@@ -97,9 +97,9 @@ void rst::Rasterizer::draw_line(rst::Pixel p0, rst::Pixel p1) {
 }
 
 void rst::Rasterizer::draw_triangle(const std::vector<Pixel> pixels) {
-	auto p0 = pixels[0];
-	auto p1 = pixels[1];
-	auto p2 = pixels[2];
+	auto& p0 = pixels[0];
+	auto& p1 = pixels[1];
+	auto& p2 = pixels[2];
 
 	auto x_range = util_rd::get_range_of_three(p0.x, p1.x, p2.x);
 	auto y_range = util_rd::get_range_of_three(p0.y, p1.y, p2.y);
@@ -115,62 +115,87 @@ void rst::Rasterizer::draw_triangle(const std::vector<Pixel> pixels) {
 			auto beta = std::get<1>(barycentric_coordinates);
 			auto gamma = std::get<2>(barycentric_coordinates);
 			if (alpha >= 0 && beta >= 0 && gamma >= 0) {
-				auto c = alpha * p0.c + beta * p1.c + gamma * p2.c;
 				uint16_t z = (alpha * p0.z + beta * p1.z + gamma * p2.z);
 				if (compare_pixel_in_z_buffer(x, y, z))
 				{
+					auto c = alpha * p0.c + beta * p1.c + gamma * p2.c;
 					draw_pixel({ x, y, c });
 				}
 			}
 
 		}
 	}
-
 }
 
-Eigen::Matrix4d rst::Rasterizer::set_viewport_matirx(double n_x, double n_y) {
-	Eigen::Matrix4d M_vp;
-	M_vp << n_x / 2, 0, 0, (n_x - 1) / 2,
-		0, n_y / 2, 0, (n_y - 1) / 2,
+void rst::Rasterizer::draw_triangle(const std::vector<Pixel> pixels, const std::vector<Eigen::Vector3d> normals) {
+	auto& p0 = pixels[0];
+	auto& p1 = pixels[1];
+	auto& p2 = pixels[2];
+
+	auto x_range = util_rd::get_range_of_three(p0.x, p1.x, p2.x);
+	auto y_range = util_rd::get_range_of_three(p0.y, p1.y, p2.y);
+
+	auto x_min = util_rd::clip(x_range.first, static_cast<size_t>(0), this->w);
+	auto x_max = util_rd::clip(x_range.second, static_cast<size_t>(0), this->w);
+	auto y_min = util_rd::clip(y_range.first, static_cast<size_t>(0), this->h);
+	auto y_max = util_rd::clip(y_range.second, static_cast<size_t>(0), this->h);
+	for (auto x = x_min; x <= x_max; ++x) {
+		for (auto y = y_min; y <= y_max; ++y) {
+			auto barycentric_coordinates = util_rd::compute_barycentric_2D(x, y, { {p0.x, p0.y}, {p1.x, p1.y},{p2.x, p2.y} });
+			auto alpha = std::get<0>(barycentric_coordinates);
+			auto beta = std::get<1>(barycentric_coordinates);
+			auto gamma = std::get<2>(barycentric_coordinates);
+			if (alpha >= 0 && beta >= 0 && gamma >= 0) {
+				uint16_t z = (alpha * p0.z + beta * p1.z + gamma * p2.z);
+				if (compare_pixel_in_z_buffer(x, y, z))
+				{
+					auto c = alpha * p0.c + beta * p1.c + gamma * p2.c;
+					auto n = alpha * normals[0] + beta * normals[1] + gamma * normals[2];
+					draw_pixel({ x, y, c });
+				}
+			}
+
+		}
+	}
+}
+
+void rst::Rasterizer::set_viewport_matirx() {
+	m_vp << w / 2, 0, 0, (w - 1) / 2,
+		0, h / 2, 0, (h - 1) / 2,
 		0, 0, 1, 0,
 		0, 0, 0, 1;
-	return M_vp;
 }
 
 
-Eigen::Matrix4d rst::Rasterizer::set_orthographic_projection_matrix(double l, double r, double b, double t, double f, double n) {
-	Eigen::Matrix4d M_orth;
-	M_orth << 2 / (r - l), 0, 0, -(r + l) / (r - l),
-		0, 2 / (t - b), 0, -(t + b) / (t - b),
-		0, 0, 2 / (n - f), -(n + f) / (n - f),
+void rst::Rasterizer::set_orthographic_projection_matrix() {
+	m_orth << 2 / (right - left), 0, 0, -(right + left) / (right - left),
+		0, 2 / (top - bottom), 0, -(top + bottom) / (top - bottom),
+		0, 0, 2 / (near - far), -(near + far) / (near - far),
 		0, 0, 0, 1;
-	return M_orth;
 }
 
 
-Eigen::Matrix4d rst::Rasterizer::set_perspective_projection_matrix(double l, double r, double b, double t, double f, double n) {
-	Eigen::Matrix4d M_per;
-	M_per << 2 * n / (r - l), 0, (l + r) / (l - r), 0,
-		0, 2 * n / (t - b), (b + t) / (b - t), 0,
-		0, 0, (f + n) / (n - f), 2 * f * n / (f - n),
+void rst::Rasterizer::set_perspective_projection_matrix() {
+	m_per << 2 * near / (right - left), 0, (left + right) / (left - right), 0,
+		0, 2 * near / (top - bottom), (bottom + top) / (bottom - top), 0,
+		0, 0, (far + near) / (near - far), 2 * far * near / (far - near),
 		0, 0, 1, 0;
-	return M_per;
 }
 
 
-Eigen::Matrix4d rst::Rasterizer::set_camera_tranformation_matrix(Eigen::Vector3d e, Eigen::Vector3d g, Eigen::Vector3d t) {
+void rst::Rasterizer::set_camera_tranformation_matrix() {
 	// param: e - eye position
 	// param: g - gaze direction
 	// param: t - view-up vector
 
-	Eigen::Vector3d w = -g.normalized();
-	Eigen::Vector3d u = (t.cross(w)).normalized();
+	Eigen::Vector3d w = -gaze.normalized();
+	Eigen::Vector3d u = (up.cross(w)).normalized();
 	Eigen::Vector3d v = w.cross(u);
 
 	Eigen::Matrix4d M_e_t;
-	M_e_t << 1, 0, 0, -e(0),
-		0, 1, 0, -e(1),
-		0, 0, 1, -e(2),
+	M_e_t << 1, 0, 0, -eye(0),
+		0, 1, 0, -eye(1),
+		0, 0, 1, -eye(2),
 		0, 0, 0, 1;
 
 	Eigen::Matrix4d M_uvw;
@@ -179,22 +204,18 @@ Eigen::Matrix4d rst::Rasterizer::set_camera_tranformation_matrix(Eigen::Vector3d
 		w(0), w(1), w(2), 0,
 		0, 0, 0, 1;
 
-	Eigen::Matrix4d M_cam = M_uvw * M_e_t;
-
-	return M_cam;
+	m_cam = M_uvw * M_e_t;
 }
 
 void rst::Rasterizer::set_view_volume(double theta, double near, double far) {
-	this->top = abs(near) * tan(theta / 360 * MYPI);
-	this->bottom = -top;
+	top = abs(near) * tan(theta / 360 * MYPI);
+	bottom = -top;
 
-	double n_x = this->w;
-	double n_y = this->h; 
-	this->right = (n_x / n_y) * this->top;
-	this->left = -right;
+	right = (w / h) * top;
+	left = -right;
 	
-	this->near = near;
-	this->far = far;
+	near = near;
+	far = far;
 }
 
 void rst::Rasterizer::set_camera(Eigen::Vector3d eye, Eigen::Vector3d gaze, Eigen::Vector3d view_up) {
@@ -203,16 +224,21 @@ void rst::Rasterizer::set_camera(Eigen::Vector3d eye, Eigen::Vector3d gaze, Eige
 	this->up = view_up;
 }
 
+void rst::Rasterizer::set_model_tranformation_matrix() {
+	m_model = Eigen::Matrix4d::Identity();
+}
+
 void rst::Rasterizer::calculate_matrix() {
-	double n_x = this->w;
-	double n_y = this->h;
-	auto M_vp = set_viewport_matirx(n_x, n_y);
 
-	//auto M_orth = set_orthographic_projection_matrix(l, r, b, t, f, n);
-	auto M_per = set_perspective_projection_matrix(left, right, bottom, top, far, near);
-	auto M_cam = set_camera_tranformation_matrix(eye, gaze, up);
+	set_viewport_matirx();
 
-	this->M_trans = M_vp * M_per * M_cam;
+	set_orthographic_projection_matrix();
+	set_perspective_projection_matrix();
+	set_orthographic_projection_matrix();
+	set_camera_tranformation_matrix();
+	set_model_tranformation_matrix();
+	mvp = m_vp * m_per * m_cam * m_model;
+	
 }
 
 
