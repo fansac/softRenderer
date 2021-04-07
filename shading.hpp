@@ -1,5 +1,10 @@
+#include <Eigen/Dense>
+#include <vector>
+#include "mesh.h"
+#include "rasterizer.hpp"
+#include "util.hpp"
 
-void open_image(void){
+//void open_image(void){
 		//string file_path = "E:\\softRenderer\\SoftRenderer\\fire1.png";
 	//cout << file_path << endl;
 	//vector<Vector3d> canvas(WINDOW_WIDTH * WINDOW_HEIGHT, Vector3d(0, 0, 0));
@@ -30,9 +35,9 @@ void open_image(void){
 	//cv::imshow("Window", img); //ÏÔÊ¾Í¼Ïñ
 	//cv::waitKey();
 	//system("pause");
-}
+//}
 
-void vertex_shading() {
+//void vertex_shading() {
 	/*string file_name = "cube.obj";
 	TriangleMesh mesh;
 	read_mesh_from_obj_file(mesh, file_name);
@@ -81,4 +86,6 @@ void vertex_shading() {
 
 		r.draw_triangle(pixels[0], pixels[1], pixels[2]);
 	}*/
-}
+//}
+
+void gouraud_shading(TriangleMesh& mesh, rst::Rasterizer& r, const Eigen::Vector3d eye_point, const Eigen::Matrix4d M);

@@ -96,7 +96,11 @@ void rst::Rasterizer::draw_line(rst::Pixel p0, rst::Pixel p1) {
 	} while (!(x == p1.x && y == p1.y));
 }
 
-void rst::Rasterizer::draw_triangle(Pixel p0, Pixel p1, Pixel p2) {
+void rst::Rasterizer::draw_triangle(const std::vector<Pixel> pixels) {
+	auto p0 = pixels[0];
+	auto p1 = pixels[1];
+	auto p2 = pixels[2];
+
 	auto x_range = util_rd::get_range_of_three(p0.x, p1.x, p2.x);
 	auto y_range = util_rd::get_range_of_three(p0.y, p1.y, p2.y);
 

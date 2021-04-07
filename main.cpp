@@ -8,7 +8,7 @@
 #include "rasterizer.hpp"
 #include "mesh.h"
 #include "util.hpp"
-
+#include "shading.hpp"
 
 using namespace std;
 using namespace cv;
@@ -40,15 +40,11 @@ int main(void) {
 	r.set_camera(eye_point, gaze, view_up);
 	r.calculate_matrix();
 
-	Eigen::Vector3d light = { -1, -1, -1 };
-	Eigen::Vector3d c_l = { 1.0, 1.0, 1.0 };
-	Eigen::Vector3d c_a = Eigen::Vector3d(10, 10, 10) / 255;
-	Eigen::Vector3d c_p = { 0.7937, 0.7937, 0.7937 };
-	auto direc_light = -(light.normalized());
-	cout << "light: " << direc_light << endl;
 	auto M = r.get_M();
 
-
+	// shading
+	std::cout << "shading" << std::endl;
+	gouraud_shading(mesh, r, eye_point, M);
 	
 
 	// show image

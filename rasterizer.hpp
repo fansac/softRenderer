@@ -40,7 +40,7 @@ namespace rst {
 
 		void draw_pixel(Pixel p);
 		void draw_line(Pixel p0, Pixel p1);
-		void draw_triangle(Pixel p0, Pixel p1, Pixel p2);
+		void draw_triangle(const std::vector<Pixel> pixels);
 		void calculate_matrix();
 		bool compare_pixel_in_z_buffer(size_t x, size_t y, uint32_t z);
 
