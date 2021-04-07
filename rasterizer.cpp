@@ -2,10 +2,10 @@
 
 
 
-rst::Rasterizer::Rasterizer(size_t width, size_t height) : w(width), h(height) {
-	assert(w <= 1920 && h <= 1080);
-	canvas = std::vector<Eigen::Vector3d>(w * h, Eigen::Vector3d(0, 0, 0));
-	z_buffer = std::vector<uint16_t>(w * h, UINT16_MAX);
+rst::Rasterizer::Rasterizer(size_t width, size_t height) : w(width), h(height), n_x(width), n_y(height) {
+	assert(n_x <= 1920 && n_y <= 1080);
+	canvas = std::vector<Eigen::Vector3d>(n_x * n_y, Eigen::Vector3d(0, 0, 0));
+	z_buffer = std::vector<uint16_t>(n_x * n_y, UINT16_MAX);
 }
 
 //void rst::Rasterizer::set_screen_size(size_t width, size_t height) {
@@ -21,15 +21,15 @@ uint32_t rst::Rasterizer::to_z_buffer_value(double z) {
 
 bool rst::Rasterizer::compare_pixel_in_z_buffer(size_t x, size_t y, uint32_t z) {
 	bool is_near = false;
-	if (z <= z_buffer[y * w + x]) {
+	if (z <= z_buffer[y * n_x + x]) {
 		is_near = true;
-		z_buffer[y * w + x] = z;
+		z_buffer[y * n_x + x] = z;
 	}
 	return is_near;
 }
 
 std::pair<size_t, size_t> rst::Rasterizer::get_screen_size() {
-	return std::make_pair(w, h);
+	return std::make_pair(n_x, n_y);
 }
 
 std::vector<Eigen::Vector3d> rst::Rasterizer::get_canvas() { return canvas; }
@@ -41,10 +41,10 @@ Eigen::Matrix4d rst::Rasterizer::get_M() {
 
 
 std::vector<Eigen::Vector3d> rst::Rasterizer::canvas_2_screen() {
-	std::vector<Eigen::Vector3d> screen(w * h, Eigen::Vector3d(0, 0, 0));
-	for (size_t y = 0; y < h; ++y) {
-		for (size_t x = 0; x < w; ++x) {
-			screen[(h - 1 - y) * w + x] = canvas[y * w + x];
+	std::vector<Eigen::Vector3d> screen(n_x * n_y, Eigen::Vector3d(0, 0, 0));
+	for (size_t y = 0; y < n_y; ++y) {
+		for (size_t x = 0; x < n_x; ++x) {
+			screen[(n_y - 1 - y) * n_x + x] = canvas[y * n_x + x];
 		}
 	}
 	return screen;
@@ -54,14 +54,14 @@ std::vector<Eigen::Vector3d> rst::Rasterizer::canvas_2_screen() {
 
 
 void rst::Rasterizer::draw_pixel(Pixel p) {
-	assert(canvas.size() == w * h && p.x < w && p.y < h);
-	assert(p.y * w + p.x < w * h);
-	canvas[p.y * w + p.x] = p.c;
+	assert(canvas.size() == n_x * n_y && p.x < n_x && p.y < n_y);
+	assert(p.y * n_x + p.x < n_x * n_y);
+	canvas[p.y * n_x + p.x] = p.c;
 }
 
 void rst::Rasterizer::draw_line(rst::Pixel p0, rst::Pixel p1) {
 	// Bresenham algorithm https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-	assert(canvas.size() == w * h && p0.x < w && p0.y < h && p1.x < w && p1.y < h);
+	assert(canvas.size() == n_x * n_y && p0.x < n_x && p0.y < n_y && p1.x < n_x && p1.y < n_y);
 	int sign_x = util_rd::sign_int(p0.x, p1.x);
 	int sign_y = util_rd::sign_int(p0.y, p1.y);
 
@@ -104,10 +104,10 @@ void rst::Rasterizer::draw_triangle(const std::vector<Pixel> pixels) {
 	auto x_range = util_rd::get_range_of_three(p0.x, p1.x, p2.x);
 	auto y_range = util_rd::get_range_of_three(p0.y, p1.y, p2.y);
 
-	auto x_min = util_rd::clip(x_range.first, static_cast<size_t>(0), this->w);
-	auto x_max = util_rd::clip(x_range.second, static_cast<size_t>(0), this->w);
-	auto y_min = util_rd::clip(y_range.first, static_cast<size_t>(0), this->h);
-	auto y_max = util_rd::clip(y_range.second, static_cast<size_t>(0), this->h);
+	auto x_min = util_rd::clip(x_range.first, static_cast<size_t>(0), this->n_x);
+	auto x_max = util_rd::clip(x_range.second, static_cast<size_t>(0), this->n_x);
+	auto y_min = util_rd::clip(y_range.first, static_cast<size_t>(0), this->n_y);
+	auto y_max = util_rd::clip(y_range.second, static_cast<size_t>(0), this->n_y);
 	for (auto x = x_min; x <= x_max; ++x) {
 		for (auto y = y_min; y <= y_max; ++y) {
 			auto barycentric_coordinates = util_rd::compute_barycentric_2D(x, y, { {p0.x, p0.y}, {p1.x, p1.y},{p2.x, p2.y} });
@@ -135,10 +135,10 @@ void rst::Rasterizer::draw_triangle(const std::vector<Pixel> pixels, const std::
 	auto x_range = util_rd::get_range_of_three(p0.x, p1.x, p2.x);
 	auto y_range = util_rd::get_range_of_three(p0.y, p1.y, p2.y);
 
-	auto x_min = util_rd::clip(x_range.first, static_cast<size_t>(0), this->w);
-	auto x_max = util_rd::clip(x_range.second, static_cast<size_t>(0), this->w);
-	auto y_min = util_rd::clip(y_range.first, static_cast<size_t>(0), this->h);
-	auto y_max = util_rd::clip(y_range.second, static_cast<size_t>(0), this->h);
+	auto x_min = util_rd::clip(x_range.first, static_cast<size_t>(0), this->n_x);
+	auto x_max = util_rd::clip(x_range.second, static_cast<size_t>(0), this->n_x);
+	auto y_min = util_rd::clip(y_range.first, static_cast<size_t>(0), this->n_y);
+	auto y_max = util_rd::clip(y_range.second, static_cast<size_t>(0), this->n_y);
 	for (auto x = x_min; x <= x_max; ++x) {
 		for (auto y = y_min; y <= y_max; ++y) {
 			auto barycentric_coordinates = util_rd::compute_barycentric_2D(x, y, { {p0.x, p0.y}, {p1.x, p1.y},{p2.x, p2.y} });
@@ -208,14 +208,14 @@ void rst::Rasterizer::set_camera_tranformation_matrix() {
 }
 
 void rst::Rasterizer::set_view_volume(double theta, double near, double far) {
-	top = abs(near) * tan(theta / 360 * MYPI);
-	bottom = -top;
+	this->top = abs(near) * tan(theta / 360 * MYPI);
+	this->bottom = -this->top;
 
-	right = (w / h) * top;
-	left = -right;
+	this->right = this->w / this->h * this->top;
+	this->left = -right;
 	
-	near = near;
-	far = far;
+	this->near = near;
+	this->far = far;
 }
 
 void rst::Rasterizer::set_camera(Eigen::Vector3d eye, Eigen::Vector3d gaze, Eigen::Vector3d view_up) {

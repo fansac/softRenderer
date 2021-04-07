@@ -31,9 +31,8 @@ namespace rst {
 
 		int test_index = 0;
 
-		size_t w;
-		size_t h;
-		double left, right, bottom, top, near, far, fov;
+		size_t n_x, n_y;
+		double w, h, left, right, bottom, top, near, far, fov;
 		Eigen::Vector3d eye, gaze, up;
 		Eigen::Matrix4d m_vp, m_orth, m_per, m_cam, m_trans, m_model, mvp;
 		std::vector<Eigen::Vector3d>canvas;

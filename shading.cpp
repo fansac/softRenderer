@@ -62,10 +62,10 @@ void phong_shading(TriangleMesh& mesh, rst::Rasterizer& r) {
 		auto x_range = util_rd::get_range_of_three(p0.x(), p1.x(), p2.x());
 		auto y_range = util_rd::get_range_of_three(p0.y(), p1.y(), p2.y());
 
-		auto x_min = util_rd::clip(x_range.first, static_cast<size_t>(0), r.w);
-		auto x_max = util_rd::clip(x_range.second, static_cast<size_t>(0), r.w);
-		auto y_min = util_rd::clip(y_range.first, static_cast<size_t>(0), r.h);
-		auto y_max = util_rd::clip(y_range.second, static_cast<size_t>(0), r.h);
+		auto x_min = util_rd::clip(x_range.first, static_cast<size_t>(0), r.n_x);
+		auto x_max = util_rd::clip(x_range.second, static_cast<size_t>(0), r.n_x);
+		auto y_min = util_rd::clip(y_range.first, static_cast<size_t>(0), r.n_y);
+		auto y_max = util_rd::clip(y_range.second, static_cast<size_t>(0), r.n_y);
 
 		for (auto x = x_min; x <= x_max; ++x) {
 			for (auto y = y_min; y <= y_max; ++y) {
@@ -85,7 +85,7 @@ void phong_shading(TriangleMesh& mesh, rst::Rasterizer& r) {
 						double cosine = util_rd::clip(n.dot(direc_light), 0.0, 1.0);
 						double phong_coe = pow(max(h.dot(direc_light), 0.0), PHONGEXP);
 						Eigen::Vector3d c = ((c_r.array() * (c_a + c_l * cosine).array()) + c_l.array() * c_p.array() * phong_coe).min(Eigen::Array3d(1, 1, 1)).max(Array3d(0, 0, 0));						
-						r.draw_pixel({ x, y, c });
+						r.draw_pixel({ x, y, c * 255 });
 					}
 				}
 
