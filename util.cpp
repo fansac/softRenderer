@@ -31,19 +31,4 @@ std::tuple<double, double, double> util_rd::compute_barycentric_2D(double x, dou
 }
 
 
-std::pair<size_t, size_t> util_rd::get_range_of_three(const size_t a, const size_t b, const size_t c) {
-	size_t min_three, max_three;
-	if (a <= b) {
-		min_three = a, max_three = b;
-	}
-	else {
-		min_three = b, max_three = a;
-	}
-	if (c < min_three) {
-		min_three = c;
-	}
-	else if (c > max_three) {
-		max_three = c;
-	}
-	return { min_three, max_three };
-}
+

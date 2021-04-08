@@ -84,7 +84,11 @@ vector<uint16_t> TriangleMesh::find_triangles_index_of_vertex(uint16_t v_i) { //
 	auto t_start = t_i;
 	do {
 		triangles_index.push_back(t_i);
-		e = this->edges[this->triangles[t_i].e_nbr[i]];
+		auto tri = this->triangles[t_i];
+		if (tri.e_nbr[i] == UINT16_MAX) {
+			break;
+		}
+		e = this->edges[tri.e_nbr[i]];
 		t_i = e.t_index;
 		i = e.i;
 		i = (i + 1) % 3;

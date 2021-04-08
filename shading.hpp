@@ -3,7 +3,8 @@
 #include "mesh.h"
 #include "rasterizer.hpp"
 #include "util.hpp"
-
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui_c.h>
 //void open_image(void){
 		//string file_path = "E:\\softRenderer\\SoftRenderer\\fire1.png";
 	//cout << file_path << endl;

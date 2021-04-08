@@ -2,9 +2,9 @@
 #define RASTERIZER_GLOBAL_H
 
 constexpr double MYEPSON = 1E-5;
-constexpr size_t WINDOW_WIDTH = 640;
+constexpr size_t WINDOW_WIDTH = 480;
 constexpr size_t WINDOW_HEIGHT = 480;
 constexpr double MYPI = 3.1415926535897932384626;
-constexpr size_t PHONGEXP = 150;
+constexpr size_t PHONGEXP = 640;
 
 #endif //RASTERIZER_GLOBAL_H

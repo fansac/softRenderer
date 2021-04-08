@@ -5,7 +5,7 @@
 rst::Rasterizer::Rasterizer(size_t width, size_t height) : w(width), h(height), n_x(width), n_y(height) {
 	assert(n_x <= 1920 && n_y <= 1080);
 	canvas = std::vector<Eigen::Vector3d>(n_x * n_y, Eigen::Vector3d(0, 0, 0));
-	z_buffer = std::vector<uint16_t>(n_x * n_y, UINT16_MAX);
+	z_buffer = std::vector<uint32_t>(n_x * n_y, UINT32_MAX);
 }
 
 //void rst::Rasterizer::set_screen_size(size_t width, size_t height) {
@@ -104,10 +104,10 @@ void rst::Rasterizer::draw_triangle(const std::vector<Pixel> pixels) {
 	auto x_range = util_rd::get_range_of_three(p0.x, p1.x, p2.x);
 	auto y_range = util_rd::get_range_of_three(p0.y, p1.y, p2.y);
 
-	auto x_min = util_rd::clip(x_range.first, static_cast<size_t>(0), this->n_x);
-	auto x_max = util_rd::clip(x_range.second, static_cast<size_t>(0), this->n_x);
-	auto y_min = util_rd::clip(y_range.first, static_cast<size_t>(0), this->n_y);
-	auto y_max = util_rd::clip(y_range.second, static_cast<size_t>(0), this->n_y);
+	auto x_min = util_rd::clip(static_cast<size_t>(x_range.first - 0.5), static_cast<size_t>(0), this->n_x);
+	auto x_max = util_rd::clip(static_cast<size_t>(x_range.second + 0.5), static_cast<size_t>(0), this->n_x);
+	auto y_min = util_rd::clip(static_cast<size_t>(y_range.first - 0.5), static_cast<size_t>(0), this->n_y);
+	auto y_max = util_rd::clip(static_cast<size_t>(y_range.second + 0.5), static_cast<size_t>(0), this->n_y);
 	for (auto x = x_min; x <= x_max; ++x) {
 		for (auto y = y_min; y <= y_max; ++y) {
 			auto barycentric_coordinates = util_rd::compute_barycentric_2D(x, y, { {p0.x, p0.y}, {p1.x, p1.y},{p2.x, p2.y} });
@@ -204,6 +204,7 @@ void rst::Rasterizer::set_camera_tranformation_matrix() {
 		w(0), w(1), w(2), 0,
 		0, 0, 0, 1;
 
+	m_view = M_uvw;
 	m_cam = M_uvw * M_e_t;
 }
 
