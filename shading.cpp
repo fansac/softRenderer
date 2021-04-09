@@ -55,8 +55,8 @@ void phong_shading(TriangleMesh& mesh, rst::Rasterizer& r) {
 			// convert z depth value from [-1, 1] to [far, near];
 			pixels[i].z() = f1 * pixels[i].z() + f2;
 			// view/camera space
-			//normals[i] = util_rd::homo_to_v3(m_n * (mesh.vertices[iter->v[i]].get_normal().homogeneous())).normalized();
 			normals[i] = (m_n * mesh.vertices[iter->v[i]].get_normal()).normalized();
+			//normals[i] = (m_n * mesh.normals[iter->v[i]]).normalized();
 			points_in_view[i] = util_rd::homo_to_v3(m_eye * position_i.homogeneous());
 			colors[i] = {0, 0, 255};
 		}
@@ -100,7 +100,7 @@ void phong_shading(TriangleMesh& mesh, rst::Rasterizer& r) {
 						Eigen::Vector3d c = (c_ambient + c_diffuse + c_highlight).min(Eigen::Array3d(1, 1, 1)).max(Array3d(0, 0, 0));						
 						Eigen::Vector3d c_h = (c_l.array() * c_p.array() * phong_coe).min(Eigen::Array3d(1, 1, 1)).max(Array3d(0, 0, 0));
 						auto test_v = max(h.dot(direc_light), 0.0);
-						r.draw_pixel({ x, y, c_diffuse*255 });
+						r.draw_pixel({ x, y, c*255 });
 
 					}
 				}
