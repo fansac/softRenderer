@@ -30,16 +30,17 @@
 
 void phong_shading(TriangleMesh& mesh, rst::Rasterizer& r) {
 	Eigen::Vector3d light = { 0, 0, -1 };
-	Eigen::Vector3d c_l = { 1, 1, 1 };
-	Eigen::Vector3d c_a = Eigen::Vector3d(0.1, 0.1, 0.1);
-	Eigen::Vector3d c_p = { 0.7937, 0.7937, 0.7937 };
+	Eigen::Vector3d c_l = Eigen::Vector3d(1, 1, 1) * 0.9;
+	Eigen::Vector3d c_a = Eigen::Vector3d(1, 1, 1) * 0.15;
+	Eigen::Vector3d c_p = Eigen::Vector3d(1, 1, 1) * 0.8;
 	auto m_eye = r.m_cam * r.m_model;
-	auto m_n = m_eye.inverse().transpose();
-	Eigen::Vector3d direc_light = -util_rd::homo_to_v3(r.m_view * light.homogeneous()).normalized();
+	auto m_n = r.m_uvw.inverse().transpose();
+	Eigen::Vector3d direc_light = -(r.m_uvw * light).normalized();
 	cout << "light direction: " << endl << direc_light << endl;
 	auto f1 = (r.near - r.far) / 2;
 	auto f2 = (r.near + r.far) / 2;
 	int num_t = 0;
+	int test_normal = 0;
 	for (auto iter = mesh.triangles.begin(); iter != mesh.triangles.end(); ++iter) {
 		cout << "number of triangle: " << ++num_t << endl;
 		Eigen::Vector3d pixels[3];
@@ -54,9 +55,10 @@ void phong_shading(TriangleMesh& mesh, rst::Rasterizer& r) {
 			// convert z depth value from [-1, 1] to [far, near];
 			pixels[i].z() = f1 * pixels[i].z() + f2;
 			// view/camera space
-			normals[i] = util_rd::homo_to_v3(m_n * (mesh.vertices[iter->v[i]].get_normal().homogeneous())).normalized();
+			//normals[i] = util_rd::homo_to_v3(m_n * (mesh.vertices[iter->v[i]].get_normal().homogeneous())).normalized();
+			normals[i] = (m_n * mesh.vertices[iter->v[i]].get_normal()).normalized();
 			points_in_view[i] = util_rd::homo_to_v3(m_eye * position_i.homogeneous());
-			colors[i] = {0, 0, 125};
+			colors[i] = {0, 0, 255};
 		}
 		auto p0 = pixels[0];
 		auto p1 = pixels[1];
@@ -88,16 +90,17 @@ void phong_shading(TriangleMesh& mesh, rst::Rasterizer& r) {
 						Eigen::Vector3d h = (e + direc_light).normalized();
 						
 						auto c_r = ((alpha * colors[0] / pv0.z() + beta * colors[1] / pv1.z() + gamma * colors[2] / pv2.z()) * z_view) / 255.0;
-						auto n = ((alpha * normals[0] / pv0.z() + beta * normals[1] / pv1.z() + gamma * normals[2] / pv2.z()) * z_view).normalized();
+						Eigen::Vector3d n = ((alpha * normals[0] / pv0.z() + beta * normals[1] / pv1.z() + gamma * normals[2] / pv2.z()) * z_view).normalized();
+
 						double cosine = util_rd::clip(n.dot(direc_light), 0.0, 1.0);
-						double phong_coe = pow(max(h.dot(direc_light), 0.0), PHONGEXP);
+						double phong_coe = pow(max(h.dot(n), 0.0), PHONGEXP);
 						auto c_ambient = c_r.array() * c_a.array();
 						auto c_diffuse = c_r.array() * (c_l * cosine).array();
 						auto c_highlight = c_l.array() * c_p.array() * phong_coe;
 						Eigen::Vector3d c = (c_ambient + c_diffuse + c_highlight).min(Eigen::Array3d(1, 1, 1)).max(Array3d(0, 0, 0));						
-						//Eigen::Vector3d c_h = (c_l.array() * c_p.array() * phong_coe).min(Eigen::Array3d(1, 1, 1)).max(Array3d(0, 0, 0));
+						Eigen::Vector3d c_h = (c_l.array() * c_p.array() * phong_coe).min(Eigen::Array3d(1, 1, 1)).max(Array3d(0, 0, 0));
 						auto test_v = max(h.dot(direc_light), 0.0);
-						r.draw_pixel({ x, y, c*255 });
+						r.draw_pixel({ x, y, c_diffuse*255 });
 
 					}
 				}
@@ -109,7 +112,7 @@ void phong_shading(TriangleMesh& mesh, rst::Rasterizer& r) {
 		//cv::Mat img(WINDOW_HEIGHT, WINDOW_WIDTH, CV_64FC3, screen.data());
 		//img.convertTo(img, CV_8UC3, 1.0f);
 		//cv::cvtColor(img, img, cv::COLOR_RGB2BGR);
-		//// CV_WINDOW_NORMAL
+		// CV_WINDOW_NORMAL
 		//cv::namedWindow("test_draw_line", CV_WINDOW_NORMAL);
 		//cv::imshow("test_draw_line", img);
 		//cv::waitKey();
@@ -118,6 +121,4 @@ void phong_shading(TriangleMesh& mesh, rst::Rasterizer& r) {
 		//cout << "drawing times " << r.test_index << endl;
 	}
 }
-
-
 

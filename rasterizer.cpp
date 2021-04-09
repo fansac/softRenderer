@@ -127,37 +127,37 @@ void rst::Rasterizer::draw_triangle(const std::vector<Pixel> pixels) {
 	}
 }
 
-void rst::Rasterizer::draw_triangle(const std::vector<Pixel> pixels, const std::vector<Eigen::Vector3d> normals) {
-	auto& p0 = pixels[0];
-	auto& p1 = pixels[1];
-	auto& p2 = pixels[2];
-
-	auto x_range = util_rd::get_range_of_three(p0.x, p1.x, p2.x);
-	auto y_range = util_rd::get_range_of_three(p0.y, p1.y, p2.y);
-
-	auto x_min = util_rd::clip(x_range.first, static_cast<size_t>(0), this->n_x);
-	auto x_max = util_rd::clip(x_range.second, static_cast<size_t>(0), this->n_x);
-	auto y_min = util_rd::clip(y_range.first, static_cast<size_t>(0), this->n_y);
-	auto y_max = util_rd::clip(y_range.second, static_cast<size_t>(0), this->n_y);
-	for (auto x = x_min; x <= x_max; ++x) {
-		for (auto y = y_min; y <= y_max; ++y) {
-			auto barycentric_coordinates = util_rd::compute_barycentric_2D(x, y, { {p0.x, p0.y}, {p1.x, p1.y},{p2.x, p2.y} });
-			auto alpha = std::get<0>(barycentric_coordinates);
-			auto beta = std::get<1>(barycentric_coordinates);
-			auto gamma = std::get<2>(barycentric_coordinates);
-			if (alpha >= 0 && beta >= 0 && gamma >= 0) {
-				uint16_t z = (alpha * p0.z + beta * p1.z + gamma * p2.z);
-				if (compare_pixel_in_z_buffer(x, y, z))
-				{
-					auto c = alpha * p0.c + beta * p1.c + gamma * p2.c;
-					auto n = alpha * normals[0] + beta * normals[1] + gamma * normals[2];
-					draw_pixel({ x, y, c });
-				}
-			}
-
-		}
-	}
-}
+//void rst::Rasterizer::draw_triangle(const std::vector<Pixel> pixels, const std::vector<Eigen::Vector3d> normals) {
+//	auto& p0 = pixels[0];
+//	auto& p1 = pixels[1];
+//	auto& p2 = pixels[2];
+//
+//	auto x_range = util_rd::get_range_of_three(p0.x, p1.x, p2.x);
+//	auto y_range = util_rd::get_range_of_three(p0.y, p1.y, p2.y);
+//
+//	auto x_min = util_rd::clip(x_range.first, static_cast<size_t>(0), this->n_x);
+//	auto x_max = util_rd::clip(x_range.second, static_cast<size_t>(0), this->n_x);
+//	auto y_min = util_rd::clip(y_range.first, static_cast<size_t>(0), this->n_y);
+//	auto y_max = util_rd::clip(y_range.second, static_cast<size_t>(0), this->n_y);
+//	for (auto x = x_min; x <= x_max; ++x) {
+//		for (auto y = y_min; y <= y_max; ++y) {
+//			auto barycentric_coordinates = util_rd::compute_barycentric_2D(x, y, { {p0.x, p0.y}, {p1.x, p1.y},{p2.x, p2.y} });
+//			auto alpha = std::get<0>(barycentric_coordinates);
+//			auto beta = std::get<1>(barycentric_coordinates);
+//			auto gamma = std::get<2>(barycentric_coordinates);
+//			if (alpha >= 0 && beta >= 0 && gamma >= 0) {
+//				uint16_t z = (alpha * p0.z + beta * p1.z + gamma * p2.z);
+//				if (compare_pixel_in_z_buffer(x, y, z))
+//				{
+//					auto c = alpha * p0.c + beta * p1.c + gamma * p2.c;
+//					auto n = alpha * normals[0] + beta * normals[1] + gamma * normals[2];
+//					draw_pixel({ x, y, c });
+//				}
+//			}
+//
+//		}
+//	}
+//}
 
 void rst::Rasterizer::set_viewport_matirx() {
 	m_vp << w / 2, 0, 0, (w - 1) / 2,
@@ -204,7 +204,7 @@ void rst::Rasterizer::set_camera_tranformation_matrix() {
 		w(0), w(1), w(2), 0,
 		0, 0, 0, 1;
 
-	m_view = M_uvw;
+	m_uvw = M_uvw.block(0,0,3,3);
 	m_cam = M_uvw * M_e_t;
 }
 

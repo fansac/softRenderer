@@ -57,7 +57,7 @@ namespace util_rd {
 	Eigen::Vector2d homo_to_v2(const Eigen::Vector4d homo);
 	Eigen::Vector3d homo_to_v3(const Eigen::Vector4d homo);
 	std::tuple<double, double, double> compute_barycentric_2D(double x, double y, std::vector<Eigen::Vector2d> v);
-	
+	//Eigen::Vector3d v3d_to_v4d(const Eigen::Vector3d& v, double w = 1.0f);
 }
 
 

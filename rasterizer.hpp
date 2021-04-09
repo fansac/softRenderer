@@ -34,7 +34,8 @@ namespace rst {
 		size_t n_x, n_y;
 		double w, h, left, right, bottom, top, near, far, fov;
 		Eigen::Vector3d eye, gaze, up;
-		Eigen::Matrix4d m_vp, m_orth, m_per, m_cam, m_view, m_model, mvp;
+		Eigen::Matrix4d m_vp, m_orth, m_per, m_cam, m_model, mvp;
+		Eigen::Matrix3d m_uvw;
 		std::vector<Eigen::Vector3d>canvas;
 		std::vector<uint32_t>z_buffer;
 		
@@ -51,7 +52,7 @@ namespace rst {
 		void draw_pixel(Pixel p);
 		void draw_line(Pixel p0, Pixel p1);
 		void draw_triangle(const std::vector<Pixel> pixels);
-		void draw_triangle(const std::vector<Pixel> pixels, const std::vector<Eigen::Vector3d> normals);
+		//void draw_triangle(const std::vector<Pixel> pixels, const std::vector<Eigen::Vector3d> normals);
 		void calculate_matrix();
 		bool compare_pixel_in_z_buffer(size_t x, size_t y, uint32_t z);
 

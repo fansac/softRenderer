@@ -30,5 +30,8 @@ std::tuple<double, double, double> util_rd::compute_barycentric_2D(double x, dou
 	return { c1,c2,c3 };
 }
 
+//Eigen::Vector3d util_rd::v3d_to_v4d(const Eigen::Vector3d& v, double w){
+//	return Eigen::Vector4d(v.x(), v.y(), v.z(), w);
+//}
 
 
