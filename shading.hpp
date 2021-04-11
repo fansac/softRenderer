@@ -90,4 +90,4 @@
 //}
 
 //void gouraud_shading(TriangleMesh& mesh, rst::Rasterizer& r, const Eigen::Vector3d eye_point, const Eigen::Matrix4d M);
-void phong_shading(TriangleMesh& mesh, rst::Rasterizer& r);
+void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r);

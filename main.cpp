@@ -22,40 +22,28 @@ int main(void) {
 	auto null_arg = _getcwd(pwd, 100);
 
 	std::system("pause");
-	// main test
-	string file_name = "teapot.obj";
-	TriangleMesh mesh;
-	read_mesh_from_obj_file(mesh, file_name);
+	// read obj
+	string file_name = "unit_sphere.obj";
+	mesh::TriangleMesh mesh;;
+	mesh::read_mesh_from_obj_file(mesh, file_name);
 	std::cout << "obj: " << mesh.obj_name << endl;
 
 	std::system("pause");
 
 	rst::Rasterizer r(WINDOW_WIDTH, WINDOW_HEIGHT);
-	double theta = 60, n = -1, f = -250;
+	double theta = 45, n = -0.1, f = -50;
 	r.set_view_volume(theta, n, f);
 	
-	Eigen::Vector3d eye_point = { 0, 30, 250 };
+	Eigen::Vector3d eye_point = { 0, 0, 5 };
 	Eigen::Vector3d gaze = { 0, 0, -1 };
 	Eigen::Vector3d view_up = { 0, 1, 0 };
 
 	r.set_camera(eye_point, gaze, view_up);
 	r.calculate_matrix();
 
-	cout << "transformation test: " << endl;
-	Eigen::Vector3d light = { 0, 0, -1 };
-	Eigen::Vector3d c_l = { 1, 1, 1 };
-	Eigen::Vector3d c_a = Eigen::Vector3d(0.1, 0.1, 0.1);
-	Eigen::Vector3d c_p = { 0.7937, 0.7937, 0.7937 };
-	auto m_n = r.m_uvw.inverse().transpose();
-
-	Eigen::Vector3d c_r = { 0, 0, 1 };
-	Eigen::Vector3d normal = { -0.05744, 0.97674, -0.214348 };
-	auto normal_view = (m_n * normal).normalized();
-	cout << "normal in view: " << normal_view << endl;
-	//double cosine = util_rd::clip(normal.dot(direc_light), 0.0, 1.0);
-	//auto c_diffuse = c_r.array() * (c_l * cosine).array();
-	//Matrix4d m_n = m_eye.inverse().transpose();
-	//cout << "cosine: " << endl << c_diffuse << endl;
+	cout << "test: " << endl;
+	rst::Point2D a = {1, 0};
+	cout << "class Point2D: " << a.x << " " << a.y << endl;
 	system("pause");
 
 	// shading

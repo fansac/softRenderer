@@ -1,6 +1,14 @@
 #include "rasterizer.hpp"
 
 
+bool rst::Triangle2D::is_inside(Point2D p) {
+	double cross_a = (p.x - a.x) * (b.y - a.y) - (b.x - a.x) * (p.y - a.y);
+	double cross_b = (p.x - b.x) * (c.y - b.y) - (c.x - b.x) * (p.y - b.y);
+	double cross_c = (p.x - c.x) * (a.y - c.y) - (a.x - c.x) * (p.y - c.y);
+
+	return (cross_a > 0) && (cross_b > 0) && (cross_c > 0)
+		|| (cross_a < 0) && (cross_b < 0) && (cross_c < 0);
+}
 
 rst::Rasterizer::Rasterizer(size_t width, size_t height) : w(width), h(height), n_x(width), n_y(height) {
 	assert(n_x <= 1920 && n_y <= 1080);

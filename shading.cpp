@@ -28,21 +28,23 @@
 //	}
 //}
 
-void phong_shading(TriangleMesh& mesh, rst::Rasterizer& r) {
-	Eigen::Vector3d light = { 0, 0, -1 };
+void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r) {
+	Eigen::Vector3d light = { -1, -1, 0 };
 	Eigen::Vector3d c_l = Eigen::Vector3d(1, 1, 1) * 0.9;
 	Eigen::Vector3d c_a = Eigen::Vector3d(1, 1, 1) * 0.15;
 	Eigen::Vector3d c_p = Eigen::Vector3d(1, 1, 1) * 0.8;
 	auto m_eye = r.m_cam * r.m_model;
 	auto m_n = r.m_uvw.inverse().transpose();
 	Eigen::Vector3d direc_light = -(r.m_uvw * light).normalized();
-	cout << "light direction: " << endl << direc_light << endl;
+	std::cout << "light direction: " << std::endl << direc_light << std::endl;
 	auto f1 = (r.near - r.far) / 2;
 	auto f2 = (r.near + r.far) / 2;
 	int num_t = 0;
 	int test_normal = 0;
+	clock_t start_time, end_time;
+	start_time = clock();
 	for (auto iter = mesh.triangles.begin(); iter != mesh.triangles.end(); ++iter) {
-		cout << "number of triangle: " << ++num_t << endl;
+		//cout << "number of triangle: " << ++num_t << endl;
 		Eigen::Vector3d pixels[3];
 		Eigen::Vector3d normals[3];
 		Eigen::Vector3d points_in_view[3];
@@ -73,14 +75,14 @@ void phong_shading(TriangleMesh& mesh, rst::Rasterizer& r) {
 		auto x_max = util_rd::clip(static_cast<size_t>(x_range.second + 1), static_cast<size_t>(0), r.n_x-1);
 		auto y_min = util_rd::clip(static_cast<size_t>(y_range.first), static_cast<size_t>(0), r.n_y-1);
 		auto y_max = util_rd::clip(static_cast<size_t>(y_range.second + 1), static_cast<size_t>(0), r.n_y-1);
-
+		rst::Triangle2D tri({ p0.x(), p0.y() }, { p1.x(), p1.y() }, { p2.x(), p2.y() });
 		for (auto x = x_min; x <= x_max; ++x) {
 			for (auto y = y_min; y <= y_max; ++y) {
-				auto barycentric_coordinates = util_rd::compute_barycentric_2D(x, y, { {p0.x(), p0.y()}, {p1.x(), p1.y()},{p2.x(), p2.y()} });
-				auto alpha = std::get<0>(barycentric_coordinates);
-				auto beta = std::get<1>(barycentric_coordinates);
-				auto gamma = std::get<2>(barycentric_coordinates);
-				if (alpha >= 0 && beta >= 0 && gamma >= 0) {
+				if (tri.is_inside({static_cast<double>(x), static_cast<double>(y) })){
+					auto barycentric_coordinates = util_rd::compute_barycentric_2D(x, y, { {p0.x(), p0.y()}, {p1.x(), p1.y()},{p2.x(), p2.y()} });
+					auto alpha = std::get<0>(barycentric_coordinates);
+					auto beta = std::get<1>(barycentric_coordinates);
+					auto gamma = std::get<2>(barycentric_coordinates);
 					double z_view = 1.0 / (alpha / pv0.z() + beta / pv1.z() + gamma / pv2.z());
 					double z_depth_correct = (alpha * p0.z() / pv0.z() + beta * p1.z() / pv1.z() + gamma * p2.z() / pv2.z()) * z_view;
 					if (r.compare_pixel_in_z_buffer(x, y, r.to_z_buffer_value(z_depth_correct))){
@@ -93,13 +95,13 @@ void phong_shading(TriangleMesh& mesh, rst::Rasterizer& r) {
 						Eigen::Vector3d n = ((alpha * normals[0] / pv0.z() + beta * normals[1] / pv1.z() + gamma * normals[2] / pv2.z()) * z_view).normalized();
 
 						double cosine = util_rd::clip(n.dot(direc_light), 0.0, 1.0);
-						double phong_coe = pow(max(h.dot(n), 0.0), PHONGEXP);
+						double phong_coe = pow(std::max(h.dot(n), 0.0), PHONGEXP);
 						auto c_ambient = c_r.array() * c_a.array();
 						auto c_diffuse = c_r.array() * (c_l * cosine).array();
 						auto c_highlight = c_l.array() * c_p.array() * phong_coe;
-						Eigen::Vector3d c = (c_ambient + c_diffuse + c_highlight).min(Eigen::Array3d(1, 1, 1)).max(Array3d(0, 0, 0));						
-						Eigen::Vector3d c_h = (c_l.array() * c_p.array() * phong_coe).min(Eigen::Array3d(1, 1, 1)).max(Array3d(0, 0, 0));
-						auto test_v = max(h.dot(direc_light), 0.0);
+						Eigen::Vector3d c = (c_ambient + c_diffuse + c_highlight).min(Eigen::Array3d(1, 1, 1)).max(Eigen::Array3d(0, 0, 0));						
+						Eigen::Vector3d c_h = (c_l.array() * c_p.array() * phong_coe).min(Eigen::Array3d(1, 1, 1)).max(Eigen::Array3d(0, 0, 0));
+						auto test_v = std::max(h.dot(direc_light), 0.0);
 						r.draw_pixel({ x, y, c*255 });
 
 					}
@@ -120,5 +122,8 @@ void phong_shading(TriangleMesh& mesh, rst::Rasterizer& r) {
 		//cv::destroyWindow("test_draw_line");
 		//cout << "drawing times " << r.test_index << endl;
 	}
+	end_time = clock();
+	double lasting_time = (static_cast<double>(end_time) - start_time) / CLOCKS_PER_SEC;
+	std::cout << "time of shading: " << lasting_time << "s" << std::endl;
 }
 

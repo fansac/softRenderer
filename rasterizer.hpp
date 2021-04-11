@@ -11,6 +11,22 @@
 
 namespace rst {
 
+	class Point2D {
+	public:
+		Point2D() = default;
+		Point2D(double x, double y): x(x), y(y) {};
+		double x, y;
+	};
+
+	class Triangle2D {
+	public:
+		Triangle2D() = default;
+		Triangle2D(Point2D a, Point2D b, Point2D c) : a(a), b(b), c(c) {};
+		Point2D a, b, c;
+
+		bool is_inside(Point2D);
+	};
+
 	class Pixel {
 	public:
 		Pixel() = default;
