@@ -29,7 +29,7 @@
 //}
 
 void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r) {
-	Eigen::Vector3d light = { -1, -1, 0 };
+	Eigen::Vector3d light = { -1, -1, -1 };
 	Eigen::Vector3d c_l = Eigen::Vector3d(1, 1, 1) * 0.9;
 	Eigen::Vector3d c_a = Eigen::Vector3d(1, 1, 1) * 0.15;
 	Eigen::Vector3d c_p = Eigen::Vector3d(1, 1, 1) * 0.8;
@@ -44,7 +44,7 @@ void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r) {
 	clock_t start_time, end_time;
 	start_time = clock();
 	for (auto iter = mesh.triangles.begin(); iter != mesh.triangles.end(); ++iter) {
-		//cout << "number of triangle: " << ++num_t << endl;
+		std::cout << "number of triangle: " << ++num_t << std::endl;
 		Eigen::Vector3d pixels[3];
 		Eigen::Vector3d normals[3];
 		Eigen::Vector3d points_in_view[3];

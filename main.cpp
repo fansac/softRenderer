@@ -23,7 +23,7 @@ int main(void) {
 
 	std::system("pause");
 	// read obj
-	string file_name = "unit_sphere.obj";
+	string file_name = "spot_triangulated_good.obj";
 	mesh::TriangleMesh mesh;;
 	mesh::read_mesh_from_obj_file(mesh, file_name);
 	std::cout << "obj: " << mesh.obj_name << endl;

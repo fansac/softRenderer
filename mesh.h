@@ -43,7 +43,6 @@ namespace mesh {
 		uint16_t v[3];
 		uint16_t e_nbr[3];
 		uint16_t n[3];
-		uint16_t c[3];
 		Eigen::Vector3d normal;
 
 		Triangle();

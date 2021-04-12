@@ -52,7 +52,6 @@ void mesh::TriangleMesh::add_triangle(std::vector<uint16_t> v_index, std::vector
 	for (uint16_t i = 0; i < 3; ++i) {
 		t_iter->v[i] = v_index[i];
 		t_iter->n[i] = vn[i];
-		t_iter->c[i] = vt[i];
 		this->edges.emplace_back(i, this->triangles.size() - 1);
 
 		auto v_iter = this->vertices.begin() + v_index[i];
@@ -81,7 +80,7 @@ std::vector<uint16_t> mesh::TriangleMesh::find_triangles_index_of_vertex(uint16_
 	auto t_start = t_i;
 	do {
 		triangles_index.push_back(t_i);
-		auto tri = this->triangles[t_i];
+		auto& tri = this->triangles[t_i];
 		if (tri.e_nbr[i] == UINT16_MAX) {
 			break;
 		}
