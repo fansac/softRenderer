@@ -7,6 +7,7 @@
 #include <Eigen/Dense>
 
 #include "util.hpp"
+#include "texture.hpp"
 #include "global.h"
 
 namespace rst {

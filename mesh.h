@@ -26,15 +26,18 @@ namespace mesh {
 		void set_position(Eigen::Vector3d new_position);
 		void set_normal(Eigen::Vector3d n);
 		void set_color(Eigen::Vector3d c);
+		void set_texcoord(Eigen::Vector2d texcoord);
 
 		Eigen::Vector3d get_position();
 		Eigen::Vector3d get_normal();
 		Eigen::Vector3d get_color();
+		Eigen::Vector2d get_tecoord();
 
 	private:
 		Eigen::Vector3d position;
 		Eigen::Vector3d normal;
 		Eigen::Vector3d color;
+		Eigen::Vector2d texcoord;
 	};
 
 
@@ -43,6 +46,7 @@ namespace mesh {
 		uint16_t v[3];
 		uint16_t e_nbr[3];
 		uint16_t n[3];
+		uint16_t t[3];
 		Eigen::Vector3d normal;
 
 		Triangle();
@@ -66,7 +70,7 @@ namespace mesh {
 		std::vector<Edge> edges;
 		std::vector<Triangle> triangles;
 		std::vector<Eigen::Vector3d> normals;
-		std::vector<Eigen::Vector3d> colors;
+		std::vector<Eigen::Vector2d> texcoords;
 
 		struct pair_hash {
 			size_t operator()  (const std::pair<uint16_t, uint16_t>& p) const
@@ -83,7 +87,7 @@ namespace mesh {
 
 		void add_vertex(double x, double y, double z);
 		void add_normal(double x, double y, double z);
-		void add_color(double x, double y, double z);
+		void add_texcoord(double x, double y);
 		void add_triangle(std::vector<uint16_t> v_index, std::vector<uint16_t> vt, std::vector<uint16_t> vn);
 		std::vector<uint16_t> find_triangles_index_of_vertex(uint16_t v_i);
 		void calculate_average_normal_of_vertices();

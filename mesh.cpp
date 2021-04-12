@@ -10,6 +10,7 @@ double mesh::Vertex::getZ() { return this->position[2]; }
 Eigen::Vector3d mesh::Vertex::get_position() { return this->position; }
 Eigen::Vector3d mesh::Vertex::get_normal() { return this->normal; }
 Eigen::Vector3d mesh::Vertex::get_color() { return this->color;  }
+Eigen::Vector2d mesh::Vertex::get_tecoord() { return this->texcoord;  }
 
 void mesh::Vertex::setX(double x) { this->position[0] = x; }
 void mesh::Vertex::setY(double y) { this->position[1] = y; }
@@ -17,6 +18,7 @@ void mesh::Vertex::setZ(double z) { this->position[2] = z; }
 void mesh::Vertex::set_position(Eigen::Vector3d new_position) { this->position = new_position; }
 void mesh::Vertex::set_normal(Eigen::Vector3d n) { this->normal = n; }
 void mesh::Vertex::set_color(Eigen::Vector3d c) { this->color = c;  }
+void mesh::Vertex::set_texcoord(Eigen::Vector2d texcorrd) { this->texcoord = texcoord;  }
 
 // class Triangle
 mesh::Triangle::Triangle() {
@@ -41,7 +43,7 @@ void mesh::TriangleMesh::add_vertex(double x, double y, double z) {
 
 void mesh::TriangleMesh::add_normal(double x, double y, double z) { this->normals.emplace_back(x, y, z); }
 
-void mesh::TriangleMesh::add_color(double c0, double c1, double c2) { this->colors.emplace_back(c0, c1, c2); }
+void mesh::TriangleMesh::add_texcoord(double u, double v) { this->texcoords.emplace_back(u, v); }
 
 void mesh::TriangleMesh::add_triangle(std::vector<uint16_t> v_index, std::vector<uint16_t> vt, std::vector<uint16_t> vn) {
 	// counterclockwise
@@ -52,6 +54,7 @@ void mesh::TriangleMesh::add_triangle(std::vector<uint16_t> v_index, std::vector
 	for (uint16_t i = 0; i < 3; ++i) {
 		t_iter->v[i] = v_index[i];
 		t_iter->n[i] = vn[i];
+		t_iter->t[i] = vt[i];
 		this->edges.emplace_back(i, this->triangles.size() - 1);
 
 		auto v_iter = this->vertices.begin() + v_index[i];
@@ -152,9 +155,9 @@ void mesh::read_mesh_from_obj_file(TriangleMesh &mesh, const std::string file_pa
 			mesh.add_normal(x, y, z);
 		}
 		if (head == "vt") {
-			double d0, d1, d2;;
-			s_in >> d0 >> d1 >> d2;
-			mesh.add_color(d0, d1, d2);
+			double u, v;;
+			s_in >> u >> v;
+			mesh.add_texcoord(u, v);
 		}
 		else if (head == "f") {
 			auto v_info = read_face_element_line(s_in);

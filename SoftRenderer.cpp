@@ -30,9 +30,9 @@ void render_triangle(TriangleMesh& mesh, vector<Vector3d>& canvas) {
 		auto b = mesh.vertices[iter->v[1]].get_position();
 		auto c = mesh.vertices[iter->v[2]].get_position();
 
-		auto c_a = mesh.vertices[iter->v[0]].get_color();
-		auto c_b = mesh.vertices[iter->v[1]].get_color();
-		auto c_c = mesh.vertices[iter->v[2]].get_color();
+		//auto c_a = mesh.vertices[iter->v[0]].get_color();
+		//auto c_b = mesh.vertices[iter->v[1]].get_color();
+		//auto c_c = mesh.vertices[iter->v[2]].get_color();
 
 		auto n = (b - a).cross(c - a);
 		auto n_2 = n.squaredNorm();

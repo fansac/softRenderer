@@ -1,5 +1,6 @@
 #include <iostream>
 #include <direct.h>
+#include <string>
 #include <Eigen/Dense>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui_c.h>
@@ -16,19 +17,23 @@ using namespace Eigen;
 
 
 
-int main(void) {
-	std::cout << "main start" << std::endl;
-	char pwd[100];
-	auto null_arg = _getcwd(pwd, 100);
 
-	std::system("pause");
-	// read obj
+int main(void) {
+
+	// read obj spot_triangulated_good unit_sphere
 	string file_name = "spot_triangulated_good.obj";
 	mesh::TriangleMesh mesh;;
 	mesh::read_mesh_from_obj_file(mesh, file_name);
 	std::cout << "obj: " << mesh.obj_name << endl;
 
 	std::system("pause");
+
+	string texture_path = "spot_texture.png";
+	Texture tex = Texture(texture_path);
+	cv::namedWindow("tex_show");
+	cv::imshow("tex_show", tex.image_data);
+	cv::waitKey();
+	cv::destroyWindow("tex_show");
 
 	rst::Rasterizer r(WINDOW_WIDTH, WINDOW_HEIGHT);
 	double theta = 45, n = -0.1, f = -50;
@@ -42,14 +47,14 @@ int main(void) {
 	r.calculate_matrix();
 
 	cout << "test: " << endl;
-	rst::Point2D a = {1, 0};
-	cout << "class Point2D: " << a.x << " " << a.y << endl;
+	double a = -1.052242;
+	cout << fmod(fmod(a,1.0) + 1, 1.0) << endl;
 	system("pause");
 
 	// shading
 	std::cout << "shading" << std::endl;
 	//gouraud_shading(mesh, r, eye_point, M);
-	phong_shading(mesh, r);
+	phong_shading(mesh, r, tex);
 
 
 	// show image
