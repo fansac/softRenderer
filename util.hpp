@@ -20,7 +20,7 @@ namespace util_rd {
 	template <typename V>
 	V linear_interpolate(double x, double x0, V v0, double x1, V v1) {
 		double d_1_0 = x1 - x0;
-		if (abs(d_1_0) < MYEPSON) {
+		if (abs(d_1_0) < MYEPSILON) {
 			return  (v0 + v1) / 2;
 		}
 		return v0 + (v1 - v0) * ((x - x0) / d_1_0);

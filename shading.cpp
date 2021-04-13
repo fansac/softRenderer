@@ -151,10 +151,12 @@ void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& t
 		Eigen::Vector3d normals[3];
 		Eigen::Vector3d points_in_view[3];
 		Eigen::Vector2d texcoord[3];
+		double w[3];
 		for (unsigned int i = 0; i < 3; ++i) {
 			Eigen::Vector3d position_i = mesh.vertices[iter->v[i]].get_position();
 			// (pixel.x, pixel.y) in [WIDTH, HEIGHT]
 			auto homo = r.mvp * position_i.homogeneous();
+			w[i] = homo.w();
 			pixels[i] = util_rd::homo_to_v3(homo);
 			// convert z depth value from [-1, 1] to [far, near];
 			pixels[i].z() = f1 * pixels[i].z() + f2;
@@ -185,15 +187,15 @@ void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& t
 					auto alpha = std::get<0>(barycentric_coordinates);
 					auto beta = std::get<1>(barycentric_coordinates);
 					auto gamma = std::get<2>(barycentric_coordinates);
-					double z_view = 1.0 / (alpha / pv0.z() + beta / pv1.z() + gamma / pv2.z());
-					double z_depth_correct = (alpha * p0.z() / pv0.z() + beta * p1.z() / pv1.z() + gamma * p2.z() / pv2.z()) * z_view;
+					double z_view = 1.0 / (alpha / w[0] + beta / w[1] + gamma / w[2]);
+					double z_depth_correct = (alpha * p0.z() / w[0] + beta * p1.z() / w[1] + gamma * p2.z() / w[2]) * z_view;
 					if (r.compare_pixel_in_z_buffer(x, y, r.to_z_buffer_value(z_depth_correct))) {
-						double x_view = (alpha * pv0.x() / pv0.z() + beta * pv1.x() / pv1.z() + gamma * pv2.x() / pv2.z()) * z_view;
-						double y_view = (alpha * pv0.y() / pv0.z() + beta * pv1.y() / pv1.z() + gamma * pv2.y() / pv2.z()) * z_view;
+						double x_view = (alpha * pv0.x() / w[0] + beta * pv1.x() / w[1] + gamma * pv2.x() / w[2]) * z_view;
+						double y_view = (alpha * pv0.y() / w[0] + beta * pv1.y() / w[1] + gamma * pv2.y() / w[2]) * z_view;
 						Eigen::Vector3d e = (-Eigen::Vector3d(x_view, y_view, z_view)).normalized();
 						Eigen::Vector3d h = (e + direc_light).normalized();
-						double u = (alpha * texcoord[0][0] / pv0.z() + beta * texcoord[1][0] / pv1.z() + gamma * texcoord[2][0] / pv2.z()) * z_view;
-						double v = (alpha * texcoord[0][1] / pv0.z() + beta * texcoord[1][1] / pv1.z() + gamma * texcoord[2][1] / pv2.z()) * z_view;
+						double u = (alpha * texcoord[0][0] / w[0] + beta * texcoord[1][0] / w[1] + gamma * texcoord[2][0] / w[2]) * z_view;
+						double v = (alpha * texcoord[0][1] / w[0] + beta * texcoord[1][1] / w[1] + gamma * texcoord[2][1] / w[2]) * z_view;
 						u = tex::texcoord_wrap(u);
 						v = tex::texcoord_wrap(v);
 						auto c_r = tex.get_color(u, v) / 255;
