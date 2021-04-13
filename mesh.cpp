@@ -84,9 +84,9 @@ std::vector<uint16_t> mesh::TriangleMesh::find_triangles_index_of_vertex(uint16_
 	do {
 		triangles_index.push_back(t_i);
 		auto& tri = this->triangles[t_i];
-		if (tri.e_nbr[i] == UINT16_MAX) {
-			break;
-		}
+		//if (tri.e_nbr[i] == UINT16_MAX) {
+		//	break;
+		//}
 		e = this->edges[tri.e_nbr[i]];
 		t_i = e.t_index;
 		i = e.i;
@@ -167,7 +167,8 @@ void mesh::read_mesh_from_obj_file(TriangleMesh &mesh, const std::string file_pa
 			mesh.add_triangle(v, vt, vn);
 		}
 	}
-	mesh.calculate_average_normal_of_vertices();
+	// cannot be used at current
+	//mesh.calculate_average_normal_of_vertices();
 	f_in.close();
 	mesh.e_index_map.clear();
 	assert(static_cast<size_t>(mesh.n_vertex) == mesh.vertices.size());

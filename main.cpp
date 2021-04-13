@@ -29,7 +29,7 @@ int main(void) {
 	std::system("pause");
 
 	string texture_path = "spot_texture.png";
-	Texture tex = Texture(texture_path);
+	tex::Texture tex = tex::Texture(texture_path);
 	cv::namedWindow("tex_show");
 	cv::imshow("tex_show", tex.image_data);
 	cv::waitKey();

@@ -194,8 +194,8 @@ void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& t
 						Eigen::Vector3d h = (e + direc_light).normalized();
 						double u = (alpha * texcoord[0][0] / pv0.z() + beta * texcoord[1][0] / pv1.z() + gamma * texcoord[2][0] / pv2.z()) * z_view;
 						double v = (alpha * texcoord[0][1] / pv0.z() + beta * texcoord[1][1] / pv1.z() + gamma * texcoord[2][1] / pv2.z()) * z_view;
-						/*u = texcoord_wrap(u);
-						v = texcoord_wrap(v);*/
+						u = tex::texcoord_wrap(u);
+						v = tex::texcoord_wrap(v);
 						auto c_r = tex.get_color(u, v) / 255;
 						Eigen::Vector3d n = ((alpha * normals[0] / pv0.z() + beta * normals[1] / pv1.z() + gamma * normals[2] / pv2.z()) * z_view).normalized();
 
@@ -214,18 +214,6 @@ void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& t
 
 			}
 		}
-		//system("pause");
-		//auto screen = r.canvas_2_screen();
-		//cv::Mat img(WINDOW_HEIGHT, WINDOW_WIDTH, CV_64FC3, screen.data());
-		//img.convertTo(img, CV_8UC3, 1.0f);
-		//cv::cvtColor(img, img, cv::COLOR_RGB2BGR);
-		// CV_WINDOW_NORMAL
-		//cv::namedWindow("test_draw_line", CV_WINDOW_NORMAL);
-		//cv::imshow("test_draw_line", img);
-		//cv::waitKey();
-		//cv::imwrite(mesh.obj_name + ".jpg", img);
-		//cv::destroyWindow("test_draw_line");
-		//cout << "drawing times " << r.test_index << endl;
 	}
 	end_time = clock();
 	double lasting_time = (static_cast<double>(end_time) - start_time) / CLOCKS_PER_SEC;

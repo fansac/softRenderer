@@ -5,7 +5,7 @@
 #include <opencv2/opencv.hpp>
 
 namespace tex {
-    double texcoord_wrap(double d) {
+    inline double texcoord_wrap(double d) {
         double result = fmod(d, 1.0);
         if (result < 0) {
             result += 1;
