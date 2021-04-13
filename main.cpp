@@ -36,10 +36,15 @@ int main(void) {
 	cv::destroyWindow("tex_show");
 
 	rst::Rasterizer r(WINDOW_WIDTH, WINDOW_HEIGHT);
+
+	double angle = 140, scale = 2.5;
+	//double angle = 0, scale = 1.0;
+	r.set_model_transformation(angle, scale);
+
 	double theta = 45, n = -0.1, f = -50;
 	r.set_view_volume(theta, n, f);
 	
-	Eigen::Vector3d eye_point = { 0, 0, 5 };
+	Eigen::Vector3d eye_point = { 0, 0, 10 };
 	Eigen::Vector3d gaze = { 0, 0, -1 };
 	Eigen::Vector3d view_up = { 0, 1, 0 };
 

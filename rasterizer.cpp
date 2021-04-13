@@ -216,6 +216,11 @@ void rst::Rasterizer::set_camera_tranformation_matrix() {
 	m_cam = M_uvw * M_e_t;
 }
 
+void rst::Rasterizer::set_model_transformation(double angle, double scale) {
+	this->angle = angle;
+	this->scale = scale;
+}
+
 void rst::Rasterizer::set_view_volume(double theta, double near, double far) {
 	this->top = abs(near) * tan(theta / 360 * MYPI);
 	this->bottom = -this->top;
@@ -234,7 +239,23 @@ void rst::Rasterizer::set_camera(Eigen::Vector3d eye, Eigen::Vector3d gaze, Eige
 }
 
 void rst::Rasterizer::set_model_tranformation_matrix() {
-	m_model = Eigen::Matrix4d::Identity();
+	
+	Eigen::Matrix4d rotation;
+	angle = angle * MYPI / 180.0;
+	rotation << cos(angle), 0, sin(angle), 0,
+		0, 1, 0, 0,
+		-sin(angle), 0, cos(angle), 0,
+		0, 0, 0, 1;
+
+	Eigen::Matrix4d scale;
+	scale << this->scale, 0, 0, 0,
+		0, this->scale, 0, 0,
+		0, 0, this->scale, 0,
+		0, 0, 0, 1;
+	
+	Eigen::Matrix4d translate = Eigen::Matrix4d::Identity();
+
+	m_model = translate * rotation * scale;
 }
 
 void rst::Rasterizer::calculate_matrix() {
