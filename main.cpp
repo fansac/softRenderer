@@ -52,15 +52,14 @@ int main(void) {
 	r.calculate_matrix();
 
 	cout << "test: " << endl;
-	double a = -1.052242;
-	cout << fmod(fmod(a,1.0) + 1, 1.0) << endl;
+
 	system("pause");
 
 	// shading
 	std::cout << "shading" << std::endl;
-	//gouraud_shading(mesh, r, eye_point, M);
-	phong_shading(mesh, r, tex);
-
+	gouraud_shading(mesh, r);
+	//phong_shading(mesh, r, tex);
+	//phong_shading(mesh, r);
 
 	// show image
 	std::cout << "show image" << endl;
