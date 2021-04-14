@@ -72,6 +72,9 @@ namespace mesh {
 		std::vector<Eigen::Vector3d> normals;
 		std::vector<Eigen::Vector2d> texcoords;
 
+		// scene
+		double x_min, x_max, y_min, y_max, z_min, z_max;
+
 		struct pair_hash {
 			size_t operator()  (const std::pair<uint16_t, uint16_t>& p) const
 			{
@@ -91,6 +94,7 @@ namespace mesh {
 		void add_triangle(std::vector<uint16_t> v_index, std::vector<uint16_t> vt, std::vector<uint16_t> vn);
 		std::vector<uint16_t> find_triangles_index_of_vertex(uint16_t v_i);
 		void calculate_average_normal_of_vertices();
+		void calculate_AABB_of_scence();
 	};
 
 

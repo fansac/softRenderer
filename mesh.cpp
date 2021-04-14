@@ -167,11 +167,13 @@ void mesh::read_mesh_from_obj_file(TriangleMesh &mesh, const std::string file_pa
 			mesh.add_triangle(v, vt, vn);
 		}
 	}
-	// cannot be used at current
-	//mesh.calculate_average_normal_of_vertices();
+	
 	f_in.close();
 	mesh.e_index_map.clear();
 	assert(static_cast<size_t>(mesh.n_vertex) == mesh.vertices.size());
+	// cannot be used at current
+	//mesh.calculate_average_normal_of_vertices();
+	mesh.calculate_AABB_of_scence();
 }
 
 
@@ -188,5 +190,19 @@ void mesh::TriangleMesh::calculate_average_normal_of_vertices() {
 			average += this->triangles[index].normal;
 		}
 		this->vertices[i].set_normal(average.normalized());
+	}
+}
+
+void mesh::TriangleMesh::calculate_AABB_of_scence() {
+	if (n_vertex > 0) {
+		x_max = x_min = vertices[0].getX();
+		y_max = y_min = vertices[0].getY();
+		z_max = z_min = vertices[0].getZ();
+	}
+	for (auto iter : vertices) {
+		auto pos = iter.get_position();
+		util_rd::update_min_max(iter.getX(), x_min, x_max);
+		util_rd::update_min_max(iter.getY(), y_min, y_max);
+		util_rd::update_min_max(iter.getZ(), z_min, z_max);
 	}
 }

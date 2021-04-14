@@ -14,13 +14,13 @@ void gouraud_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r) {
 	int num_t = 0;
 	clock_t start_time, end_time;
 	start_time = clock();
-	for (auto iter = mesh.triangles.begin(); iter != mesh.triangles.end(); ++iter) {
+	for (auto iter : mesh.triangles) {
 		std::cout << "number of triangle: " << ++num_t << std::endl;
 		Eigen::Vector3d pixels[3];
 		Eigen::Vector3d colors[3];
 		double w[3];
 		for (unsigned int i = 0; i < 3; ++i) {
-			Eigen::Vector3d position_i = mesh.vertices[iter->v[i]].get_position();
+			Eigen::Vector3d position_i = mesh.vertices[iter.v[i]].get_position();
 			// (pixel.x, pixel.y) in [WIDTH, HEIGHT]
 			auto homo = r.mvp * position_i.homogeneous();
 			w[i] = homo.w();
@@ -29,7 +29,7 @@ void gouraud_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r) {
 			pixels[i].z() = f1 * pixels[i].z() + f2;
 			Eigen::Vector3d e = (-position_i).normalized();
 			Eigen::Vector3d h = (e + direc_light).normalized();
-			Eigen::Vector3d normal_i = (m_n * mesh.normals[iter->n[i]]).normalized();
+			Eigen::Vector3d normal_i = (m_n * mesh.normals[iter.n[i]]).normalized();
 			Eigen::Vector3d c_r = { 0, 0, 1.0 };
 
 			pixels[i] = util_rd::homo_to_v3(r.mvp * position_i.homogeneous());
@@ -72,6 +72,9 @@ void gouraud_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r) {
 			}
 		}
 	}
+	end_time = clock();
+	double lasting_time = (static_cast<double>(end_time) - start_time) / CLOCKS_PER_SEC;
+	std::cout << "time of shading: " << lasting_time << "s" << std::endl;
 }
 
 void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r) {
@@ -88,7 +91,7 @@ void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r) {
 	int num_t = 0;
 	clock_t start_time, end_time;
 	start_time = clock();
-	for (auto iter = mesh.triangles.begin(); iter != mesh.triangles.end(); ++iter) {
+	for (auto iter : mesh.triangles) {
 		std::cout << "number of triangle: " << ++num_t << std::endl;
 		Eigen::Vector3d pixels[3];
 		Eigen::Vector3d normals[3];
@@ -96,7 +99,7 @@ void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r) {
 		Eigen::Vector3d points_in_view[3];
 		Eigen::Vector3d colors[3];
 		for (unsigned int i = 0; i < 3; ++i) {
-			Eigen::Vector3d position_i = mesh.vertices[iter->v[i]].get_position();
+			Eigen::Vector3d position_i = mesh.vertices[iter.v[i]].get_position();
 			// (pixel.x, pixel.y) in [WIDTH, HEIGHT]
 			auto homo = r.mvp * position_i.homogeneous();
 			w[i] = homo.w();
@@ -105,7 +108,7 @@ void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r) {
 			pixels[i].z() = f1 * pixels[i].z() + f2;
 			// view/camera space
 			//normals[i] = (m_n * mesh.vertices[iter->v[i]].get_normal()).normalized();
-			normals[i] = (m_n * mesh.normals[iter->n[i]]).normalized();
+			normals[i] = (m_n * mesh.normals[iter.n[i]]).normalized();
 			points_in_view[i] = util_rd::homo_to_v3(m_eye * position_i.homogeneous());
 			colors[i] = {0, 0, 255};
 		}
@@ -189,7 +192,7 @@ void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& t
 
 	clock_t start_time, end_time;
 	start_time = clock();
-	for (auto iter = mesh.triangles.begin(); iter != mesh.triangles.end(); ++iter) {
+	for (auto iter : mesh.triangles) {
 		std::cout << "number of triangle: " << ++num_tri << std::endl;
 		Eigen::Vector3d pixels[3];
 		Eigen::Vector3d normals[3];
@@ -197,7 +200,7 @@ void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& t
 		Eigen::Vector2d texcoord[3];
 		double w[3];
 		for (unsigned int i = 0; i < 3; ++i) {
-			Eigen::Vector3d position_i = mesh.vertices[iter->v[i]].get_position();
+			Eigen::Vector3d position_i = mesh.vertices[iter.v[i]].get_position();
 			// (pixel.x, pixel.y) in [WIDTH, HEIGHT]
 			auto homo = r.mvp * position_i.homogeneous();
 			w[i] = homo.w();
@@ -206,9 +209,9 @@ void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& t
 			pixels[i].z() = f1 * pixels[i].z() + f2;
 			// view/camera space
 			//normals[i] = (m_n * mesh.vertices[iter->v[i]].get_normal()).normalized();
-			normals[i] = (m_n * mesh.normals[iter->n[i]]).normalized();
+			normals[i] = (m_n * mesh.normals[iter.n[i]]).normalized();
 			points_in_view[i] = util_rd::homo_to_v3(m_eye * position_i.homogeneous());
-			texcoord[i] = mesh.texcoords[iter->t[i]];
+			texcoord[i] = mesh.texcoords[iter.t[i]];
 		}
 		auto p0 = pixels[0];
 		auto p1 = pixels[1];
@@ -267,4 +270,12 @@ void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& t
 	end_time = clock();
 	double lasting_time = (static_cast<double>(end_time) - start_time) / CLOCKS_PER_SEC;
 	std::cout << "time of shading: " << lasting_time << "s" << std::endl;
+}
+
+void phong_shading_shadow(mesh::TriangleMesh& mesh, rst::Rasterizer& r) {
+	Eigen::Vector3d light_position = { 15, 15, 15 };
+	Eigen::Vector3d light_intensity = { 500, 500, 500 };
+	Eigen::Vector3d ambient_light_intensity = { 10, 10, 10 };
+	Eigen::Vector3d ka = { 0.005, 0.005, 0.005 };
+	Eigen::Vector3d ks = { 0.7937, 0.7937, 0.7937 };
 }

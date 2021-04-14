@@ -19,13 +19,26 @@ using namespace Eigen;
 
 
 int main(void) {
+	cout << "main start" << endl;
+	system("pause");
+
+	cout << "test: " << endl;
+	vector<double> v = { 1.0 , 2.0, 3.0, 4.0 };
+	double xmin = v[0], xmax = v[1];
+	for (auto iter : v) {
+		util_rd::update_min_max(iter, xmin, xmax);
+	}
+	cout << "min " << xmin << " " << "max " << xmax << endl;
+
+	system("pause");
 
 	// read obj spot_triangulated_good unit_sphere
 	string file_name = "spot_triangulated_good.obj";
 	mesh::TriangleMesh mesh;;
 	mesh::read_mesh_from_obj_file(mesh, file_name);
 	std::cout << "obj: " << mesh.obj_name << endl;
-
+	cout << "AABB: " << "(" <<mesh.x_min << ", " << mesh.x_max << "), (" << mesh.y_min << ", " << mesh.y_max <<
+		"), (" << mesh.z_min << ", " << mesh.z_max << ")" << endl;
 	std::system("pause");
 
 	string texture_path = "spot_texture.png";
@@ -51,14 +64,12 @@ int main(void) {
 	r.set_camera(eye_point, gaze, view_up);
 	r.calculate_matrix();
 
-	cout << "test: " << endl;
-
-	system("pause");
+	
 
 	// shading
 	std::cout << "shading" << std::endl;
-	gouraud_shading(mesh, r);
-	//phong_shading(mesh, r, tex);
+	//gouraud_shading(mesh, r);
+	phong_shading(mesh, r, tex);
 	//phong_shading(mesh, r);
 
 	// show image

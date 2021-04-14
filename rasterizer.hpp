@@ -57,7 +57,6 @@ namespace rst {
 		std::vector<Eigen::Vector3d>canvas;
 		std::vector<uint32_t>z_buffer;
 		
-
 		//void set_screen_size(size_t width, size_t height);
 		std::pair<size_t, size_t> get_screen_size();
 		std::vector<Eigen::Vector3d> get_canvas();

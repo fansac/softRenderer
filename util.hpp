@@ -26,6 +26,17 @@ namespace util_rd {
 		return v0 + (v1 - v0) * ((x - x0) / d_1_0);
 	};
 
+	template <typename T>
+	void update_min_max(T x, T& min, T& max) {
+		if (x < min) {
+			min = x;
+			return;
+		}
+		if (x > max) {
+			max = x;
+			return;
+		}
+	}
 
 	template <typename T>
 	std::pair<T, T> get_range_of_three(const T a, const T b, const T c) {
@@ -54,7 +65,7 @@ namespace util_rd {
 
 	bool is_file_exists_ifstream(const std::string name);
 	std::string find_file_name(const std::string file_path);
-	Eigen::Vector2d homo_to_v2(const Eigen::Vector4d homo);
+
 	Eigen::Vector3d homo_to_v3(const Eigen::Vector4d homo);
 	std::tuple<double, double, double> compute_barycentric_2D(double x, double y, std::vector<Eigen::Vector2d> v);
 	//Eigen::Vector3d v3d_to_v4d(const Eigen::Vector3d& v, double w = 1.0f);

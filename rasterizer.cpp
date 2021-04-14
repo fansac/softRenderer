@@ -116,21 +116,18 @@ void rst::Rasterizer::draw_triangle(const std::vector<Pixel> pixels) {
 	auto x_max = util_rd::clip(static_cast<size_t>(x_range.second + 0.5), static_cast<size_t>(0), this->n_x);
 	auto y_min = util_rd::clip(static_cast<size_t>(y_range.first - 0.5), static_cast<size_t>(0), this->n_y);
 	auto y_max = util_rd::clip(static_cast<size_t>(y_range.second + 0.5), static_cast<size_t>(0), this->n_y);
+	Triangle2D tri({ static_cast<double>(p0.x), static_cast<double>(p0.y) }, { static_cast<double>(p1.x), static_cast<double>(p1.y) }
+				, { static_cast<double>(p2.x), static_cast<double>(p2.y) });
 	for (auto x = x_min; x <= x_max; ++x) {
 		for (auto y = y_min; y <= y_max; ++y) {
-			auto barycentric_coordinates = util_rd::compute_barycentric_2D(x, y, { {p0.x, p0.y}, {p1.x, p1.y},{p2.x, p2.y} });
-			auto alpha = std::get<0>(barycentric_coordinates);
-			auto beta = std::get<1>(barycentric_coordinates);
-			auto gamma = std::get<2>(barycentric_coordinates);
-			if (alpha >= 0 && beta >= 0 && gamma >= 0) {
-				uint16_t z = (alpha * p0.z + beta * p1.z + gamma * p2.z);
-				if (compare_pixel_in_z_buffer(x, y, z))
-				{
-					auto c = alpha * p0.c + beta * p1.c + gamma * p2.c;
-					draw_pixel({ x, y, c });
-				}
+			if (tri.is_inside({ static_cast<double>(x), static_cast<double>(y) })) {
+				auto barycentric_coordinates = util_rd::compute_barycentric_2D(x, y, { {p0.x, p0.y}, {p1.x, p1.y},{p2.x, p2.y} });
+				auto alpha = std::get<0>(barycentric_coordinates);
+				auto beta = std::get<1>(barycentric_coordinates);
+				auto gamma = std::get<2>(barycentric_coordinates);
+				auto c = alpha * p0.c + beta * p1.c + gamma * p2.c;
+				draw_pixel({ x, y, c });
 			}
-
 		}
 	}
 }

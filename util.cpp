@@ -12,11 +12,6 @@ std::string util_rd::find_file_name(const std::string file_path) {
 	return file_path.substr(start, end);
 }
 
-Eigen::Vector2d util_rd::homo_to_v2(const Eigen::Vector4d homo) {
-	assert(abs(homo(3)) > MYEPSILON);
-	return { homo(0) / homo(3), homo(1) / homo(3) };
-}
-
 
 Eigen::Vector3d util_rd::homo_to_v3(const Eigen::Vector4d homo) {
 	assert(abs(homo(3)) > MYEPSILON);
