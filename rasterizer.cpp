@@ -13,7 +13,7 @@ bool rst::Triangle2D::is_inside(Point2D p) {
 rst::Rasterizer::Rasterizer(size_t width, size_t height) : w(width), h(height), n_x(width), n_y(height) {
 	assert(n_x <= 1920 && n_y <= 1080);
 	canvas = std::vector<Eigen::Vector3d>(n_x * n_y, Eigen::Vector3d(0, 0, 0));
-	z_buffer = std::vector<uint32_t>(n_x * n_y, UINT32_MAX);
+	z_buffer = std::vector<uint16_t>(n_x * n_y, UINT16_MAX);
 }
 
 //void rst::Rasterizer::set_screen_size(size_t width, size_t height) {
@@ -21,13 +21,13 @@ rst::Rasterizer::Rasterizer(size_t width, size_t height) : w(width), h(height), 
 //	this->h = height;
 //};
 
-uint32_t rst::Rasterizer::to_z_buffer_value(double z) {
-	double z_value = ((z - this->near) / (this->far - this->near) * static_cast<double>(UINT32_MAX));
+uint16_t rst::Rasterizer::to_z_buffer_value(double z) {
+	double z_value = ((z - this->near) / (this->far - this->near) * static_cast<double>(UINT16_MAX));
 	assert(z_value > 0);
 	return z_value;
 }
 
-bool rst::Rasterizer::compare_pixel_in_z_buffer(size_t x, size_t y, uint32_t z) {
+bool rst::Rasterizer::compare_pixel_in_z_buffer(size_t x, size_t y, uint16_t z) {
 	bool is_near = false;
 	if (z <= z_buffer[y * n_x + x]) {
 		is_near = true;
@@ -132,37 +132,29 @@ void rst::Rasterizer::draw_triangle(const std::vector<Pixel> pixels) {
 	}
 }
 
-//void rst::Rasterizer::draw_triangle(const std::vector<Pixel> pixels, const std::vector<Eigen::Vector3d> normals) {
-//	auto& p0 = pixels[0];
-//	auto& p1 = pixels[1];
-//	auto& p2 = pixels[2];
-//
-//	auto x_range = util_rd::get_range_of_three(p0.x, p1.x, p2.x);
-//	auto y_range = util_rd::get_range_of_three(p0.y, p1.y, p2.y);
-//
-//	auto x_min = util_rd::clip(x_range.first, static_cast<size_t>(0), this->n_x);
-//	auto x_max = util_rd::clip(x_range.second, static_cast<size_t>(0), this->n_x);
-//	auto y_min = util_rd::clip(y_range.first, static_cast<size_t>(0), this->n_y);
-//	auto y_max = util_rd::clip(y_range.second, static_cast<size_t>(0), this->n_y);
-//	for (auto x = x_min; x <= x_max; ++x) {
-//		for (auto y = y_min; y <= y_max; ++y) {
-//			auto barycentric_coordinates = util_rd::compute_barycentric_2D(x, y, { {p0.x, p0.y}, {p1.x, p1.y},{p2.x, p2.y} });
-//			auto alpha = std::get<0>(barycentric_coordinates);
-//			auto beta = std::get<1>(barycentric_coordinates);
-//			auto gamma = std::get<2>(barycentric_coordinates);
-//			if (alpha >= 0 && beta >= 0 && gamma >= 0) {
-//				uint16_t z = (alpha * p0.z + beta * p1.z + gamma * p2.z);
-//				if (compare_pixel_in_z_buffer(x, y, z))
-//				{
-//					auto c = alpha * p0.c + beta * p1.c + gamma * p2.c;
-//					auto n = alpha * normals[0] + beta * normals[1] + gamma * normals[2];
-//					draw_pixel({ x, y, c });
-//				}
-//			}
-//
-//		}
-//	}
-//}
+
+void rst::Rasterizer::set_model_transformation(double angle, double scale) {
+	this->angle = angle;
+	this->scale = scale;
+}
+
+void rst::Rasterizer::set_view_volume(double theta, double near, double far) {
+	this->top = abs(near) * tan(theta / 360 * MYPI);
+	this->bottom = -this->top;
+
+	this->right = this->w / this->h * this->top;
+	this->left = -right;
+
+	this->near = near;
+	this->far = far;
+}
+
+void rst::Rasterizer::set_camera(Eigen::Vector3d eye, Eigen::Vector3d gaze, Eigen::Vector3d view_up) {
+	this->eye = eye;
+	this->gaze = gaze;
+	this->up = view_up;
+}
+
 
 void rst::Rasterizer::set_viewport_matirx() {
 	m_vp << w / 2, 0, 0, (w - 1) / 2,
@@ -213,27 +205,7 @@ void rst::Rasterizer::set_camera_tranformation_matrix() {
 	m_cam = M_uvw * M_e_t;
 }
 
-void rst::Rasterizer::set_model_transformation(double angle, double scale) {
-	this->angle = angle;
-	this->scale = scale;
-}
 
-void rst::Rasterizer::set_view_volume(double theta, double near, double far) {
-	this->top = abs(near) * tan(theta / 360 * MYPI);
-	this->bottom = -this->top;
-
-	this->right = this->w / this->h * this->top;
-	this->left = -right;
-	
-	this->near = near;
-	this->far = far;
-}
-
-void rst::Rasterizer::set_camera(Eigen::Vector3d eye, Eigen::Vector3d gaze, Eigen::Vector3d view_up) {
-	this->eye = eye;
-	this->gaze = gaze;
-	this->up = view_up;
-}
 
 void rst::Rasterizer::set_model_tranformation_matrix() {
 	

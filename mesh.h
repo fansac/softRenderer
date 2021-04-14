@@ -74,7 +74,6 @@ namespace mesh {
 
 		// scene
 		double x_min, x_max, y_min, y_max, z_min, z_max;
-
 		struct pair_hash {
 			size_t operator()  (const std::pair<uint16_t, uint16_t>& p) const
 			{

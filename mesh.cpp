@@ -171,6 +171,7 @@ void mesh::read_mesh_from_obj_file(TriangleMesh &mesh, const std::string file_pa
 	f_in.close();
 	mesh.e_index_map.clear();
 	assert(static_cast<size_t>(mesh.n_vertex) == mesh.vertices.size());
+
 	// cannot be used at current
 	//mesh.calculate_average_normal_of_vertices();
 	mesh.calculate_AABB_of_scence();

@@ -24,54 +24,60 @@ int main(void) {
 
 	cout << "test: " << endl;
 	vector<double> v = { 1.0 , 2.0, 3.0, 4.0 };
-	double xmin = v[0], xmax = v[1];
+	double xmin = DBL_MAX, xmax = DBL_MIN;
 	for (auto iter : v) {
 		util_rd::update_min_max(iter, xmin, xmax);
 	}
 	cout << "min " << xmin << " " << "max " << xmax << endl;
 
-	system("pause");
+	cout << endl << "rasterizer setting" << endl;
+	system("pause"); 
 
-	// read obj spot_triangulated_good unit_sphere
-	string file_name = "spot_triangulated_good.obj";
-	mesh::TriangleMesh mesh;;
-	mesh::read_mesh_from_obj_file(mesh, file_name);
-	std::cout << "obj: " << mesh.obj_name << endl;
-	cout << "AABB: " << "(" <<mesh.x_min << ", " << mesh.x_max << "), (" << mesh.y_min << ", " << mesh.y_max <<
-		"), (" << mesh.z_min << ", " << mesh.z_max << ")" << endl;
-	std::system("pause");
-
-	string texture_path = "spot_texture.png";
-	tex::Texture tex = tex::Texture(texture_path);
-	cv::namedWindow("tex_show");
-	cv::imshow("tex_show", tex.image_data);
-	cv::waitKey();
-	cv::destroyWindow("tex_show");
-
+	// rasterizer setting
 	rst::Rasterizer r(WINDOW_WIDTH, WINDOW_HEIGHT);
 
-	double angle = 140, scale = 2.5;
-	//double angle = 0, scale = 1.0;
+	//double angle = 140, scale = 2.5;
+	double angle = 0, scale = 1.0;
 	r.set_model_transformation(angle, scale);
 
 	double theta = 45, n = -0.1, f = -50;
 	r.set_view_volume(theta, n, f);
-	
-	Eigen::Vector3d eye_point = { 0, 0, 10 };
+
+	Eigen::Vector3d eye_point = { 0, 0, 5 };
 	Eigen::Vector3d gaze = { 0, 0, -1 };
 	Eigen::Vector3d view_up = { 0, 1, 0 };
 
 	r.set_camera(eye_point, gaze, view_up);
 	r.calculate_matrix();
 
+	cout << endl << "read model file" << endl;
+	system("pause");
+
+	// read obj spot_triangulated_good unit_sphere
+	string file_name = "unit_sphere.obj";
+	mesh::TriangleMesh mesh;;
+	mesh::read_mesh_from_obj_file(mesh, file_name);
+	std::cout << "obj: " << mesh.obj_name << endl;
+	cout << "AABB: " << "(" <<mesh.x_min << ", " << mesh.x_max << "), (" << mesh.y_min << ", " << mesh.y_max <<
+		"), (" << mesh.z_min << ", " << mesh.z_max << ")" << endl;
+	
+	cout << endl << "read texture fiel" << endl;
+	std::system("pause");
+
+	/*string texture_path = "spot_texture.png";
+	tex::Texture tex = tex::Texture(texture_path);
+	cv::namedWindow("tex_show");
+	cv::imshow("tex_show", tex.image_data);
+	cv::waitKey();
+	cv::destroyWindow("tex_show");*/
 	
 
 	// shading
 	std::cout << "shading" << std::endl;
 	//gouraud_shading(mesh, r);
-	phong_shading(mesh, r, tex);
+	//phong_shading(mesh, r, tex);
 	//phong_shading(mesh, r);
-
+	phong_shading_shadow(mesh, r);
 	// show image
 	std::cout << "show image" << endl;
 	std::system("pause");
@@ -80,11 +86,11 @@ int main(void) {
 	img.convertTo(img, CV_8UC3, 1.0f);
 	cv::cvtColor(img, img, cv::COLOR_RGB2BGR);
 	// CV_WINDOW_NORMAL
-	cv::namedWindow("test_draw_line");
-	cv::imshow("test_draw_line", img);
+	cv::namedWindow("test_rasterizing_" + mesh.obj_name);
+	cv::imshow("test_rasterizing_" + mesh.obj_name, img);
 	cv::waitKey();
 	cv::imwrite( mesh.obj_name + ".jpg", img);
-	cv::destroyWindow("test_draw_line");
+	cv::destroyWindow("test_rasterizing_" + mesh.obj_name);
 
 	std::cout << "main end" << endl;
 	std::system("pause");
