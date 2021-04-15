@@ -13,7 +13,7 @@ bool rst::Triangle2D::is_inside(Point2D p) {
 rst::Rasterizer::Rasterizer(size_t width, size_t height) : w(width), h(height), n_x(width), n_y(height) {
 	assert(n_x <= 1920 && n_y <= 1080);
 	canvas = std::vector<Eigen::Vector3d>(n_x * n_y, Eigen::Vector3d(0, 0, 0));
-	z_buffer = std::vector<uint16_t>(n_x * n_y, UINT16_MAX);
+	z_buffer = std::vector<uint32_t>(n_x * n_y, UINT32_MAX);
 }
 
 //void rst::Rasterizer::set_screen_size(size_t width, size_t height) {
@@ -21,13 +21,14 @@ rst::Rasterizer::Rasterizer(size_t width, size_t height) : w(width), h(height), 
 //	this->h = height;
 //};
 
-uint16_t rst::Rasterizer::to_z_buffer_value(double z) {
-	double z_value = ((z - this->near) / (this->far - this->near) * static_cast<double>(UINT16_MAX));
-	assert(z_value > 0);
+uint32_t rst::Rasterizer::to_z_buffer_value(double z) {
+	assert(z < this->near - MYEPSILON and z > this->far +MYEPSILON);
+	double z_value = ((z - this->near) / (this->far - this->near) * static_cast<double>(UINT32_MAX));
+	
 	return z_value;
 }
 
-bool rst::Rasterizer::compare_pixel_in_z_buffer(size_t x, size_t y, uint16_t z) {
+bool rst::Rasterizer::compare_pixel_in_z_buffer(size_t x, size_t y, uint32_t z) {
 	bool is_near = false;
 	if (z <= z_buffer[y * n_x + x]) {
 		is_near = true;
@@ -236,7 +237,7 @@ void rst::Rasterizer::calculate_matrix() {
 	set_orthographic_projection_matrix();
 	set_camera_tranformation_matrix();
 	set_model_tranformation_matrix();
-	mvp = m_vp * m_per * m_cam * m_model;
+	mvp = m_vp * m_per * m_cam;
 	
 }
 

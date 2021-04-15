@@ -55,7 +55,7 @@ namespace rst {
 		Eigen::Matrix4d m_vp, m_orth, m_per, m_cam, m_model = Eigen::Matrix4d::Identity(), mvp;
 		Eigen::Matrix3d m_uvw;
 		std::vector<Eigen::Vector3d>canvas;
-		std::vector<uint16_t>z_buffer;
+		std::vector<uint32_t>z_buffer;
 		
 		//void set_screen_size(size_t width, size_t height);
 		std::pair<size_t, size_t> get_screen_size();
@@ -72,9 +72,9 @@ namespace rst {
 		void draw_triangle(const std::vector<Pixel> pixels);
 		//void draw_triangle(const std::vector<Pixel> pixels, const std::vector<Eigen::Vector3d> normals);
 		void calculate_matrix();
-		bool compare_pixel_in_z_buffer(size_t x, size_t y, uint16_t z);
+		bool compare_pixel_in_z_buffer(size_t x, size_t y, uint32_t z);
 
-		uint16_t to_z_buffer_value(double z);
+		uint32_t to_z_buffer_value(double z);
 
 		
 		void set_viewport_matirx();
