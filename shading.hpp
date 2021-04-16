@@ -43,6 +43,7 @@
 void gouraud_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r);
 void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r);
 void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& tex);
+void bump_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& tex);
 
 void phong_shading_shadow(mesh::TriangleMesh& mesh, rst::Rasterizer& r);
 void phong_shading_shadow(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& tex);

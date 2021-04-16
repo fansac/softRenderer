@@ -29,11 +29,11 @@ int main(void) {
 	//double angle = 0, scale = 1.0;
 	r.set_model_transformation(angle, scale);
 
-	double theta = 45, n = -0.1, f = -50;
+	double theta = 60, n = -0.1, f = -100;
 	r.set_view_volume(theta, n, f);
 
-	Eigen::Vector3d eye_point = { 0, 13, 13 };
-	Eigen::Vector3d gaze = { 0, -1, -1 };
+	Eigen::Vector3d eye_point = { 0, 0, 15 };
+	Eigen::Vector3d gaze = { 0, 0, -1 };
 	Eigen::Vector3d view_up = { 0, 1, 0 };
 
 	r.set_camera(eye_point, gaze, view_up);
@@ -43,12 +43,13 @@ int main(void) {
 	system("pause");
 
 	cout << "test: " << endl;
-
-	cout << "cam inverse " << endl << r.m_cam.inverse() << endl;
-
-	cout << endl << "rasterizer setting" << endl;
+	Eigen::Vector3d a = { 1, 2, 3 }, b = { 4, 5, 6 }, c = { 7, 8, 9 };
+	Eigen::Matrix3d mm;
+	mm.col(0) = a; mm.col(1) = b; mm.col(2) = c;
+	a.normalize();
+	cout << a << endl;
 	system("pause");
-
+	
 	// read obj spot_triangulated_good unit_sphere
 	string file_name = "spot_triangulated_good.obj";
 	mesh::TriangleMesh mesh;;
@@ -60,7 +61,7 @@ int main(void) {
 	cout << endl << "read texture fiel" << endl;
 	std::system("pause");
 
-	string texture_path = "spot_texture.png";
+	string texture_path = "hmap.jpg";
 	tex::Texture tex = tex::Texture(texture_path);
 	cv::namedWindow("tex_show");
 	cv::imshow("tex_show", tex.image_data);
@@ -72,9 +73,10 @@ int main(void) {
 	std::cout << "shading" << std::endl;
 	//gouraud_shading(mesh, r);
 	//phong_shading(mesh, r, tex);
+	bump_shading(mesh, r, tex);
 	//phong_shading(mesh, r);
 	//phong_shading_shadow(mesh, r);
-	phong_shading_shadow(mesh, r, tex);
+	//phong_shading_shadow(mesh, r, tex);
 	// show image
 	std::cout << "show image" << endl;
 	std::system("pause");
