@@ -25,14 +25,15 @@ int main(void) {
 	// rasterizer setting
 	rst::Rasterizer r(WINDOW_WIDTH, WINDOW_HEIGHT);
 
-	double angle = 140, scale = 2.5;
-	//double angle = 0, scale = 1.0;
+	//double angle = 140, scale = 2.5;
+	double angle = 90, scale = 1;
+	//Eigen::Vector3d trans = { 0, 0, 0 };
 	r.set_model_transformation(angle, scale);
 
-	double theta = 60, n = -0.1, f = -100;
+	double theta = 45, n = -0.1, f = -50;
 	r.set_view_volume(theta, n, f);
 
-	Eigen::Vector3d eye_point = { 0, 0, 15 };
+	Eigen::Vector3d eye_point = { 0, 0, 10 };
 	Eigen::Vector3d gaze = { 0, 0, -1 };
 	Eigen::Vector3d view_up = { 0, 1, 0 };
 
@@ -51,7 +52,7 @@ int main(void) {
 	system("pause");
 	
 	// read obj spot_triangulated_good unit_sphere
-	string file_name = "spot_triangulated_good.obj";
+	string file_name = "nb574_model.obj";
 	mesh::TriangleMesh mesh;;
 	mesh::read_mesh_from_obj_file(mesh, file_name);
 	std::cout << "obj: " << mesh.obj_name << endl;
@@ -61,7 +62,7 @@ int main(void) {
 	cout << endl << "read texture fiel" << endl;
 	std::system("pause");
 
-	string texture_path = "hmap.jpg";
+	string texture_path = "nb574.jpg";
 	tex::Texture tex = tex::Texture(texture_path);
 	cv::namedWindow("tex_show");
 	cv::imshow("tex_show", tex.image_data);
@@ -69,11 +70,18 @@ int main(void) {
 	cv::destroyWindow("tex_show");
 	
 
+	string normal_texture_path = "nb574_normalmap.jpg";
+	tex::Texture normal_tex = tex::Texture(normal_texture_path);
+	cv::namedWindow("tex_show");
+	cv::imshow("tex_show", normal_tex.image_data);
+	cv::waitKey();
+	cv::destroyWindow("tex_show");
+
 	// shading
 	std::cout << "shading" << std::endl;
 	//gouraud_shading(mesh, r);
 	//phong_shading(mesh, r, tex);
-	bump_shading(mesh, r, tex);
+	bump_shading(mesh, r, tex, normal_tex);
 	//phong_shading(mesh, r);
 	//phong_shading_shadow(mesh, r);
 	//phong_shading_shadow(mesh, r, tex);

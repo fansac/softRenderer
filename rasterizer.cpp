@@ -134,9 +134,10 @@ void rst::Rasterizer::draw_triangle(const std::vector<Pixel> pixels) {
 }
 
 
-void rst::Rasterizer::set_model_transformation(double angle, double scale) {
+void rst::Rasterizer::set_model_transformation(double angle, double scale, Eigen::Vector3d trans) {
 	this->angle = angle;
 	this->scale = scale;
+	this->m_translate << 1, 0, 0, trans.x(), 0, 1, 0, trans.y(), 0, 0, 1, trans.z(), 0, 0, 0, 1;
 }
 
 void rst::Rasterizer::set_view_volume(double theta, double near, double far) {
@@ -223,9 +224,7 @@ void rst::Rasterizer::set_model_tranformation_matrix() {
 		0, 0, this->scale, 0,
 		0, 0, 0, 1;
 	
-	Eigen::Matrix4d translate = Eigen::Matrix4d::Identity();
-
-	m_model = translate * rotation * scale;
+	m_model =  rotation * scale * this->m_translate;
 }
 
 void rst::Rasterizer::calculate_matrix() {
