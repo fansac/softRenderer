@@ -1212,7 +1212,7 @@ void phong_shading_shadow(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Tex
 
 
 void bump_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& tex, tex::Texture& normal_map) {
-	std::vector<Eigen::Vector3d> light_position = { { -20, 20, 0 }, { 20, 20, 20 } };
+	std::vector<Eigen::Vector3d> light_position = { { -20, 20, 0 }};
 	Eigen::Vector3d light_intensity = { 500, 500, 500 };
 	Eigen::Vector3d ambient_light_intensity = { 10, 10, 10 };
 	Eigen::Vector3d ka = { 0.002, 0.002, 0.002 };
@@ -1314,7 +1314,7 @@ void bump_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& te
 						Eigen::Vector3d normal = normal_map.get_color(u, v) / 255.0 * 2.0 - Eigen::Vector3d(1, 1, 1);
 						normal = TBN * normal;
 						normal.normalize();
-						normal = n;
+						//normal = n;
 						//light_pos_view
 						// Blinn Phong lighting model
 						Eigen::Array3d c;
@@ -1330,7 +1330,7 @@ void bump_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& te
 
 							auto c_diffuse = k_d.array() * (light_intensity / r_2).array() * util_rd::clip(normal.dot(l), 0.0, 1.0); //c_r.array() * (c_l * cosine).array();
 							auto c_highlight = ks.array() * (light_intensity / r_2).array() * pow(std::max(h.dot(normal), 0.0), PHONGEXP);
-							c = c + c_diffuse + c_highlight;
+							c = c + c_diffuse ;
 						}
 						c = c.min(Eigen::Array3d(1, 1, 1)).max(Eigen::Array3d(0, 0, 0));
 						r.draw_pixel({ x, y, c * 255 });

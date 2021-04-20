@@ -26,7 +26,7 @@ int main(void) {
 	rst::Rasterizer r(WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	//double angle = 140, scale = 2.5;
-	double angle = 90, scale = 1;
+	double angle = 180, scale = 0.8;
 	//Eigen::Vector3d trans = { 0, 0, 0 };
 	r.set_model_transformation(angle, scale);
 
