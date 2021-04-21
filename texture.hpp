@@ -5,6 +5,11 @@
 #include <opencv2/opencv.hpp>
 
 namespace tex {
+    enum texType {
+        texture = 0,
+        normal = 1,
+        bump = 2
+    };
     inline double texcoord_wrap(double d) {
         double result = fmod(d, 1.0);
         if (result < 0) {
@@ -16,8 +21,8 @@ namespace tex {
     class Texture {
     public:
         cv::Mat image_data;
-        Texture(const std::string& file_path)
-        {
+        texType type = texType::texture;
+        Texture(const std::string& file_path) {
             image_data = cv::imread(file_path);
             cv::flip(image_data, image_data, 0);
             cv::cvtColor(image_data, image_data, cv::COLOR_RGB2BGR);
@@ -26,14 +31,42 @@ namespace tex {
             height = image_data.rows;
         }
 
+        Texture(const std::string& file_path, texType t): type(t) {
+            
+            
+            switch (type)
+            {
+            case tex::normal:
+                break;
+            case tex::bump:
+                image_data = cv::imread(file_path, cv::IMREAD_GRAYSCALE);
+                break;
+            default:
+                image_data = cv::imread(file_path);
+                cv::cvtColor(image_data, image_data, cv::COLOR_RGB2BGR);
+                break;
+            }
+            
+            cv::flip(image_data, image_data, 0);
+            width = image_data.cols;
+            height = image_data.rows;
+        }
+
         size_t width, height;
 
-        Eigen::Vector3d get_color(double u, double v)
-        {
+        Eigen::Vector3d get_color(double u, double v) {
             auto u_img = u * width;
             auto v_img = v * height;
             auto color = image_data.at<cv::Vec3b>(v_img, u_img);
             return Eigen::Vector3d(color[0], color[1], color[2]);
+        }
+
+        uchar get_height(double u, double v) {
+            assert(type == texType::bump);
+            auto u_img = u * width;
+            auto v_img = v * height;
+            auto color = image_data.at<uchar>(v_img, u_img);
+            return color;
         }
     };
 }

@@ -26,14 +26,15 @@ int main(void) {
 	rst::Rasterizer r(WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	//double angle = 140, scale = 2.5;
-	double angle = 180, scale = 0.8;
+	double angle = -20, scale = 1;
+	//Eigen::Vector3d trans = { 401.5, 351, 359.56 };
 	//Eigen::Vector3d trans = { 0, 0, 0 };
 	r.set_model_transformation(angle, scale);
 
 	double theta = 45, n = -0.1, f = -50;
 	r.set_view_volume(theta, n, f);
 
-	Eigen::Vector3d eye_point = { 0, 0, 10 };
+	Eigen::Vector3d eye_point = { 0, 0, 5 };
 	Eigen::Vector3d gaze = { 0, 0, -1 };
 	Eigen::Vector3d view_up = { 0, 1, 0 };
 
@@ -52,17 +53,17 @@ int main(void) {
 	system("pause");
 	
 	// read obj spot_triangulated_good unit_sphere
-	string file_name = "nb574_model.obj";
+	string file_name = "sphere_highres.obj";
 	mesh::TriangleMesh mesh;;
 	mesh::read_mesh_from_obj_file(mesh, file_name);
 	std::cout << "obj: " << mesh.obj_name << endl;
 	cout << "AABB: " << "(" <<mesh.x_min << ", " << mesh.x_max << "), (" << mesh.y_min << ", " << mesh.y_max <<
 		"), (" << mesh.z_min << ", " << mesh.z_max << ")" << endl;
 	
-	cout << endl << "read texture fiel" << endl;
+	cout << endl << "read texture file" << endl;
 	std::system("pause");
 
-	string texture_path = "nb574.jpg";
+	string texture_path = "earthmap1k.jpg";
 	tex::Texture tex = tex::Texture(texture_path);
 	cv::namedWindow("tex_show");
 	cv::imshow("tex_show", tex.image_data);
@@ -70,8 +71,9 @@ int main(void) {
 	cv::destroyWindow("tex_show");
 	
 
-	string normal_texture_path = "nb574_normalmap.jpg";
-	tex::Texture normal_tex = tex::Texture(normal_texture_path);
+	string normal_texture_path = "earthbump1k.jpg";
+	// tex::texType::bump
+	tex::Texture normal_tex = tex::Texture(normal_texture_path, tex::texType::bump);
 	cv::namedWindow("tex_show");
 	cv::imshow("tex_show", normal_tex.image_data);
 	cv::waitKey();

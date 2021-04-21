@@ -147,7 +147,7 @@ void mesh::read_mesh_from_obj_file(TriangleMesh &mesh, const std::string file_pa
 		if (head == "v") {
 			double x, y, z;
 			s_in >> x >> y >> z;
-			mesh.add_vertex(x, y, z);
+			mesh.add_vertex(x , y, z);
 		}
 		if (head == "vn") {
 			double x, y, z;
