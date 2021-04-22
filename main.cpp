@@ -11,6 +11,8 @@
 #include "util.hpp"
 #include "shading.hpp"
 
+#define RENDER
+
 using namespace std;
 using namespace cv;
 using namespace Eigen;
@@ -22,11 +24,13 @@ int main(void) {
 	cout << "main start" << endl;
 	system("pause");
 
+#ifdef RENDER
+
 	// rasterizer setting
 	rst::Rasterizer r(WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	//double angle = 140, scale = 2.5;
-	double angle = -20, scale = 1;
+	double angle = 0, scale = 1.2;
 	//Eigen::Vector3d trans = { 401.5, 351, 359.56 };
 	//Eigen::Vector3d trans = { 0, 0, 0 };
 	r.set_model_transformation(angle, scale);
@@ -62,7 +66,7 @@ int main(void) {
 	
 	cout << endl << "read texture file" << endl;
 	std::system("pause");
-
+	//earthmap1k.jpg
 	string texture_path = "earthmap1k.jpg";
 	tex::Texture tex = tex::Texture(texture_path);
 	cv::namedWindow("tex_show");
@@ -71,8 +75,10 @@ int main(void) {
 	cv::destroyWindow("tex_show");
 	
 
-	string normal_texture_path = "earthbump1k.jpg";
+	//string normal_texture_path = "earthbump1k.jpg";
+	//tex::Texture normal_tex = tex::Texture(normal_texture_path, tex::texType::bump);
 	// tex::texType::bump
+	string normal_texture_path = "earthbump1k.jpg";
 	tex::Texture normal_tex = tex::Texture(normal_texture_path, tex::texType::bump);
 	cv::namedWindow("tex_show");
 	cv::imshow("tex_show", normal_tex.image_data);
@@ -83,7 +89,9 @@ int main(void) {
 	std::cout << "shading" << std::endl;
 	//gouraud_shading(mesh, r);
 	//phong_shading(mesh, r, tex);
-	bump_shading(mesh, r, tex, normal_tex);
+	//normal_map_shading(mesh, r, tex, normal_tex);
+	displacement_map_shading(mesh, r, tex, normal_tex);
+	//bump_shading(mesh, r, tex, normal_tex);
 	//phong_shading(mesh, r);
 	//phong_shading_shadow(mesh, r);
 	//phong_shading_shadow(mesh, r, tex);
@@ -101,6 +109,7 @@ int main(void) {
 	cv::imwrite( mesh.obj_name + ".jpg", img);
 	cv::destroyWindow("test_rasterizing_" + mesh.obj_name);
 
+#endif // RENDER
 	std::cout << "main end" << endl;
 	std::system("pause");
 	return 0;

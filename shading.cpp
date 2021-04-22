@@ -173,17 +173,16 @@ void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r) {
 }
 
 void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& tex) {
-	Eigen::Vector3d light_position = { 15, 15, 15 };
+	std::vector<Eigen::Vector3d> light_position = { { -20, 20, 20 }, { 20, 20, 20 } };
 	Eigen::Vector3d light_intensity = { 500, 500, 500 };
 	Eigen::Vector3d ambient_light_intensity = { 10, 10, 10 };
-	Eigen::Vector3d ka = { 0.005, 0.005, 0.005 };
-	Eigen::Vector3d ks = { 0.7937, 0.7937, 0.7937 };
+	Eigen::Vector3d ka = { 0.002, 0.002, 0.002 };
+	Eigen::Vector3d ks = { 0.0078125, 0.0078125, 0.0078125 };
+	Eigen::Vector3d kd = { 0.8, 0.8, 0.8 };
 
+	double kh = 10, kn = 0.1;
 
-	auto m_n = (r.m_uvw * r.m_model.block(0,0,3,3)).inverse().transpose();
-	auto light_pos_view = util_rd::homo_to_v3(r.m_cam * light_position.homogeneous());
-	//Eigen::Vector3d direc_light = -(r.m_uvw * light).normalized();
-	//std::cout << "light direction: " << std::endl << direc_light << std::endl;
+	auto m_n = (r.m_uvw * r.m_model.block(0, 0, 3, 3)).inverse().transpose();
 	auto f1 = (r.near - r.far) / 2;
 	auto f2 = (r.near + r.far) / 2;
 	int num_tri = 0;
@@ -200,6 +199,7 @@ void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& t
 		for (unsigned int i = 0; i < 3; ++i) {
 			Eigen::Vector3d position_i = mesh.vertices[iter.v[i]].get_position();
 			// (pixel.x, pixel.y) in [WIDTH, HEIGHT]
+			Eigen::Vector3d p_inworld = util_rd::homo_to_v3(r.m_model * position_i.homogeneous());
 			auto homo = r.mvp * r.m_model * position_i.homogeneous();
 			w[i] = homo.w();
 			pixels[i] = util_rd::homo_to_v3(homo);
@@ -211,12 +211,14 @@ void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& t
 			points_in_view[i] = util_rd::homo_to_v3(r.m_cam * r.m_model * position_i.homogeneous());
 			texcoord[i] = mesh.texcoords[iter.t[i]];
 		}
+
 		auto p0 = pixels[0];
 		auto p1 = pixels[1];
 		auto p2 = pixels[2];
 		auto pv0 = points_in_view[0];
 		auto pv1 = points_in_view[1];
 		auto pv2 = points_in_view[2];
+
 		auto x_range = util_rd::get_range_of_three(p0.x(), p1.x(), p2.x());
 		auto y_range = util_rd::get_range_of_three(p0.y(), p1.y(), p2.y());
 
@@ -228,6 +230,7 @@ void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& t
 		for (auto x = x_min; x <= x_max; ++x) {
 			for (auto y = y_min; y <= y_max; ++y) {
 				if (tri.is_inside({ static_cast<double>(x), static_cast<double>(y) })) {
+
 					auto barycentric_coordinates = util_rd::compute_barycentric_2D(x, y, { {p0.x(), p0.y()}, {p1.x(), p1.y()},{p2.x(), p2.y()} });
 					auto alpha = std::get<0>(barycentric_coordinates);
 					auto beta = std::get<1>(barycentric_coordinates);
@@ -239,26 +242,32 @@ void phong_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& t
 						double y_view = (alpha * pv0.y() / w[0] + beta * pv1.y() / w[1] + gamma * pv2.y() / w[2]) * z_view;
 						Eigen::Vector3d p = Eigen::Vector3d(x_view, y_view, z_view);
 						Eigen::Vector3d e = (-p).normalized();
-						double r_2 = (light_pos_view - p).squaredNorm();
-						Eigen::Vector3d l = (light_pos_view - p).normalized();
-						Eigen::Vector3d h = (e + l).normalized();
+
 						double u = (alpha * texcoord[0][0] / w[0] + beta * texcoord[1][0] / w[1] + gamma * texcoord[2][0] / w[2]) * z_view;
 						double v = (alpha * texcoord[0][1] / w[0] + beta * texcoord[1][1] / w[1] + gamma * texcoord[2][1] / w[2]) * z_view;
-						u = tex::texcoord_wrap(u);
-						v = tex::texcoord_wrap(v);
-						auto kd = tex.get_color(u, v) / 255;
 						Eigen::Vector3d n = ((alpha * normals[0] / pv0.z() + beta * normals[1] / pv1.z() + gamma * normals[2] / pv2.z()) * z_view).normalized();
 
-						//double cosine = util_rd::clip(n.dot(l), 0.0, 1.0);
-						//double phong_coe = pow(std::max(h.dot(n), 0.0), PHONGEXP);
+						auto normal = n;
+						//light_pos_view
 						// Blinn Phong lighting model
+						Eigen::Array3d c;
+						auto k_d = kd.array() * (tex.get_color(u, v) / 255).array();
+						//Eigen::Vector3d k_d = Eigen::Vector3d(148,121.0,92.0) / 255.0 ;
 						auto c_ambient = ka.array() * ambient_light_intensity.array();
-						auto c_diffuse = kd.array() * (light_intensity / r_2).array() * util_rd::clip(n.dot(l), 0.0, 1.0); //c_r.array() * (c_l * cosine).array();
-						auto c_highlight = ks.array() * (light_intensity / r_2).array() * pow(std::max(h.dot(n), 0.0), PHONGEXP);
-						Eigen::Vector3d c = (c_ambient + c_diffuse + c_highlight).min(Eigen::Array3d(1, 1, 1)).max(Eigen::Array3d(0, 0, 0));
+						c = c_ambient;
+						for (const auto& l_iter : light_position) {
+							auto light_pos_view = util_rd::homo_to_v3(r.m_cam * l_iter.homogeneous());
+							double r_2 = (light_pos_view - p).squaredNorm();
+							Eigen::Vector3d l = (light_pos_view - p).normalized();
+							Eigen::Vector3d h = (e + l).normalized();
 
+							auto c_diffuse = k_d.array() * (light_intensity / r_2).array() * util_rd::clip(normal.dot(l), 0.0, 1.0); //c_r.array() * (c_l * cosine).array();
+							auto c_highlight = ks.array() * (light_intensity / r_2).array() * pow(std::max(h.dot(normal), 0.0), PHONGEXP);
+							c = c + c_diffuse;
+						}
+						c = c.min(Eigen::Array3d(1, 1, 1)).max(Eigen::Array3d(0, 0, 0));
+						//  (normal / 2 + Eigen::Vector3d(1, 1, 1))
 						r.draw_pixel({ x, y, c * 255 });
-
 					}
 				}
 
@@ -1101,7 +1110,6 @@ void normal_map_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Textu
 		Eigen::Vector3d pixels[3];
 		Eigen::Vector3d normals[3];
 		Eigen::Vector3d tangents[3];
-		Eigen::Vector3d bitangents[3];
 		Eigen::Vector3d points_in_view[3];
 		Eigen::Vector2d texcoord[3];
 		double w[3];
@@ -1130,7 +1138,6 @@ void normal_map_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Textu
 			double dV2 = texcoord[(i + 2) % 3][1] - texcoord[i][1];
 			Eigen::Vector3d t = (e1 * dV2 - e2 * dV1) / (dU1 * dV2 - dU2 * dV1);
 			tangents[i] = (t - t.dot(normals[i]) * normals[i]).normalized();
-			bitangents[i] = normals[i].cross(tangents[i]);
 		}
 
 		auto p0 = pixels[0];
@@ -1166,14 +1173,14 @@ void normal_map_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Textu
 
 						double u = (alpha * texcoord[0][0] / w[0] + beta * texcoord[1][0] / w[1] + gamma * texcoord[2][0] / w[2]) * z_view;
 						double v = (alpha * texcoord[0][1] / w[0] + beta * texcoord[1][1] / w[1] + gamma * texcoord[2][1] / w[2]) * z_view;
-						u = tex::texcoord_wrap(u);
-						v = tex::texcoord_wrap(v);
 						Eigen::Vector3d n = ((alpha * normals[0] / pv0.z() + beta * normals[1] / pv1.z() + gamma * normals[2] / pv2.z()) * z_view).normalized();
-						Eigen::Vector3d t = ((alpha * tangents[0] / pv0.z() + beta * tangents[1] / pv1.z() + gamma * tangents[2] / pv2.z()) * z_view).normalized();
-						Eigen::Vector3d b = ((alpha * bitangents[0] / pv0.z() + beta * bitangents[1] / pv1.z() + gamma * bitangents[2] / pv2.z()) * z_view).normalized();
+						Eigen::Vector3d t = ((alpha * tangents[0] / pv0.z() + beta * tangents[1] / pv1.z() + gamma * tangents[2] / pv2.z()) * z_view);
+						t = (t - n * t.dot(n)).normalized();
+						Eigen::Vector3d b = n.cross(t);
+						
 						Eigen::Matrix3d TBN;
 						TBN.col(0) = t, TBN.col(1) = b, TBN.col(2) = n;
-						Eigen::Vector3d normal = (normal_map.get_color(u, v) / 255.0 * 2.0 - Eigen::Vector3d(1, 1, 1));
+						Eigen::Vector3d normal = (normal_map.get_color(tex::texcoord_wrap(u), tex::texcoord_wrap(v)) / 255.0 * 2.0 - Eigen::Vector3d(1, 1, 1));
 						normal = TBN * normal;
 						normal.normalize();
 						//normal = n;
@@ -1209,16 +1216,15 @@ void normal_map_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Textu
 	std::cout << "time of shading: " << lasting_time << "s" << std::endl;
 }
 
-void bump_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& tex, tex::Texture& normal_map) {
-	std::vector<Eigen::Vector3d> light_position = {{ -20, 20, 20 }, { 20, 20, 20 } };
+void displacement_map_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& tex, tex::Texture& normal_map) {
+	std::vector<Eigen::Vector3d> light_position = { { 15, 15, 15 }};
 	Eigen::Vector3d light_intensity = { 500, 500, 500 };
 	Eigen::Vector3d ambient_light_intensity = { 10, 10, 10 };
 	Eigen::Vector3d ka = { 0.002, 0.002, 0.002 };
-	Eigen::Vector3d ks = { 0.0078125, 0.0078125, 0.0078125 };
-	Eigen::Vector3d kd = { 0.8, 0.8, 0.8 };
+	Eigen::Vector3d ks = { 0.78125, 0.78125, 0.78125 };
+	Eigen::Vector3d kd = { 1, 1, 1 };
 
-	double kh = 0.2, kn = 0.1;
-
+	double kh = 0.00, kn = 0.5;
 	auto m_n = (r.m_uvw * r.m_model.block(0, 0, 3, 3)).inverse().transpose();
 	//auto light_pos_view = util_rd::homo_to_v3(r.m_cam * light_position.homogeneous());
 	//Eigen::Vector3d direc_light = -(r.m_uvw * light).normalized();
@@ -1233,24 +1239,51 @@ void bump_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& te
 		std::cout << "number of triangle: " << ++num_tri << std::endl;
 		Eigen::Vector3d pixels[3];
 		Eigen::Vector3d normals[3];
+		Eigen::Vector3d tangents[3];
 		Eigen::Vector3d points_in_view[3];
 		Eigen::Vector2d texcoord[3];
 		double w[3];
 		for (unsigned int i = 0; i < 3; ++i) {
 			Eigen::Vector3d position_i = mesh.vertices[iter.v[i]].get_position();
+			normals[i] = (m_n * mesh.normals[iter.n[i]]).normalized();
+			points_in_view[i] = util_rd::homo_to_v3(r.m_cam * r.m_model * position_i.homogeneous());
+			texcoord[i] = mesh.texcoords[iter.t[i]];		
+		}
+
+		for (unsigned int i = 0; i < 3; ++i) {
+			Eigen::Vector3d n = normals[i];
+
+			Eigen::Vector3d e1 = points_in_view[(i + 1) % 3] - points_in_view[i];
+			Eigen::Vector3d e2 = points_in_view[(i + 2) % 3] - points_in_view[i];
+			double dU1 = texcoord[(i + 1) % 3][0] - texcoord[i][0];
+			double dU2 = texcoord[(i + 2) % 3][0] - texcoord[i][0];
+			double dV1 = texcoord[(i + 1) % 3][1] - texcoord[i][1];
+			double dV2 = texcoord[(i + 2) % 3][1] - texcoord[i][1];
+			Eigen::Vector3d t = (e1 * dV2 - e2 * dV1) / (dU1 * dV2 - dU2 * dV1);
+			t = (t - t.dot(n) * n).normalized();
+			Eigen::Vector3d b = n.cross(t);
+
+			double u = texcoord[i][0];
+			double v = texcoord[i][1];
+
+			double dhdu = kh * ((normal_map.get_height(tex::texcoord_wrap(u + 1.0 / static_cast<double>(tex.width)), tex::texcoord_wrap(v)) - normal_map.get_height(tex::texcoord_wrap(u - 1.0 / static_cast<double>(tex.width)), tex::texcoord_wrap(v))) / 2.0 * static_cast<double>(tex.width));
+			double dhdv = kh * ((normal_map.get_height(tex::texcoord_wrap(u), tex::texcoord_wrap(v + 1.0 / static_cast<double>(tex.height))) - normal_map.get_height(tex::texcoord_wrap(u), tex::texcoord_wrap(v - 1.0 / static_cast<double>(tex.height)))) / 2.0 * static_cast<double>(tex.height));
+
+			Eigen::Vector3d tu = t + kn * dhdu * n;
+			Eigen::Vector3d tv = b + kn * dhdv * n;
+
+			normals[i] = (tu.cross(tv)).normalized();
+			points_in_view[i] = points_in_view[i] + kn * kh * normal_map.get_height(tex::texcoord_wrap(u), tex::texcoord_wrap(v)) * normals[i];
+
 			// (pixel.x, pixel.y) in [WIDTH, HEIGHT]
-			Eigen::Vector3d p_inworld = util_rd::homo_to_v3(r.m_model * position_i.homogeneous());
-			auto homo = r.mvp * r.m_model * position_i.homogeneous();
+			auto homo = r.m_vp * r.m_per * points_in_view[i].homogeneous();
 			w[i] = homo.w();
 			pixels[i] = util_rd::homo_to_v3(homo);
 			// convert z depth value from [-1, 1] to [far, near];
 			pixels[i].z() = f1 * pixels[i].z() + f2;
-			// view/camera space
-			//normals[i] = (m_n * mesh.vertices[iter->v[i]].get_normal()).normalized();
-			normals[i] = (m_n * mesh.normals[iter.n[i]]).normalized();
-			points_in_view[i] = util_rd::homo_to_v3(r.m_cam * r.m_model * position_i.homogeneous());
-			texcoord[i] = mesh.texcoords[iter.t[i]];
 		}
+
+
 		auto p0 = pixels[0];
 		auto p1 = pixels[1];
 		auto p2 = pixels[2];
@@ -1287,26 +1320,8 @@ void bump_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& te
 						
 						double u = (alpha * texcoord[0][0] / w[0] + beta * texcoord[1][0] / w[1] + gamma * texcoord[2][0] / w[2]) * z_view;
 						double v = (alpha * texcoord[0][1] / w[0] + beta * texcoord[1][1] / w[1] + gamma * texcoord[2][1] / w[2]) * z_view;
-						u = tex::texcoord_wrap(u);
-						v = tex::texcoord_wrap(v);
-						//Eigen::Vector3d n = normal_map.get_color(u, v) * 2 - Eigen::Vector3d(1, 1, 1);
 						Eigen::Vector3d n = ((alpha * normals[0] / pv0.z() + beta * normals[1] / pv1.z() + gamma * normals[2] / pv2.z()) * z_view).normalized();
-						double denominator = std::sqrt(n.x() * n.x() + n.z() * n.z());
-						Eigen::Vector3d t = { (n.x() * n.y()) / denominator, denominator, (n.z() * n.y()) / denominator };
-						Eigen::Vector3d b = n.cross(t);
-						Eigen::Matrix3d TBN;
-						TBN.col(0) = t, TBN.col(1) = b, TBN.col(2) = n;
-						auto test_delta_u = tex::texcoord_wrap(u + 1.0 / static_cast<double>(tex.width));
-						auto test_delta_v = tex::texcoord_wrap(v + 1.0 / static_cast<double>(tex.width));
-						auto test_u1v = normal_map.get_height(tex::texcoord_wrap(u + 1.0 / static_cast<double>(tex.width)), v);
-						auto test_uv = normal_map.get_height(u, v);
-						auto test_uv1 = normal_map.get_height(u, tex::texcoord_wrap(v + 1.0 / static_cast<double>(tex.height)));
-						double dU = kh * kn * (normal_map.get_height(tex::texcoord_wrap(u + 1.0 / static_cast<double>(tex.width)), v) - normal_map.get_height(u, v));
-						double dV = kh * kn * (normal_map.get_height(u, tex::texcoord_wrap(v + 1.0 / static_cast<double>(tex.height))) - normal_map.get_height(u, v));
-						Eigen::Vector3d ln = { -dU, -dV, 1.0 };
-						p = p + kn * n * normal_map.get_height(u, v);
-						auto normal = (TBN * ln).normalized();
-						//normal = n;
+
 						Eigen::Vector3d e = (-p).normalized();
 						//light_pos_view
 						// Blinn Phong lighting model
@@ -1315,19 +1330,19 @@ void bump_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Texture& te
 						auto k_d = kd.array() * (tex.get_color(u, v) / 255).array();
 						//Eigen::Vector3d k_d = Eigen::Vector3d(148,121.0,92.0) / 255.0 ;
 						c = c_ambient;
-						for (auto l_iter : light_position) {
+						for (const auto& l_iter : light_position) {
 							auto light_pos_view = util_rd::homo_to_v3(r.m_cam * l_iter.homogeneous());
 							double r_2 = (light_pos_view - p).squaredNorm();
 							Eigen::Vector3d l = (light_pos_view - p).normalized();
 							Eigen::Vector3d h = (e + l).normalized();
-							auto k_d = kd.array() * (tex.get_color(u, v) / 255).array();
 
 
-							auto c_diffuse = k_d.array() * (light_intensity / r_2).array() * util_rd::clip(normal.dot(l), 0.0, 1.0); //c_r.array() * (c_l * cosine).array();
-							auto c_highlight = ks.array() * (light_intensity / r_2).array() * pow(std::max(h.dot(normal), 0.0), PHONGEXP);
+							auto c_diffuse = k_d.array() * (light_intensity / r_2).array() * util_rd::clip(n.dot(l), 0.0, 1.0); //c_r.array() * (c_l * cosine).array();
+							auto c_highlight = ks.array() * (light_intensity / r_2).array() * pow(std::max(h.dot(n), 0.0), PHONGEXP);
 							c = c + c_diffuse + c_highlight;
 						}
 						c = c.min(Eigen::Array3d(1, 1, 1)).max(Eigen::Array3d(0, 0, 0));
+						//  (normal / 2 + Eigen::Vector3d(1, 1, 1))
 						r.draw_pixel({ x, y, c * 255 });
 					}
 				}
