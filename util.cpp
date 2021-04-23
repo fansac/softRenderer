@@ -9,7 +9,8 @@ bool util_rd::is_file_exists_ifstream(const std::string name) {
 std::string util_rd::find_file_name(const std::string file_path) {
 	size_t start = file_path.find_last_of('/') + 1;
 	size_t end = file_path.find_last_of('.');
-	return file_path.substr(start, end);
+	std::string s = file_path.substr(start, end - start);
+	return file_path.substr(start, end - start);
 }
 
 

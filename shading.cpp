@@ -1105,6 +1105,36 @@ void normal_map_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Textu
 
 	clock_t start_time, end_time;
 	start_time = clock();
+
+	for (const auto& iter : mesh.triangles) {
+		std::cout << "number of triangle: " << ++num_tri << std::endl;
+		Eigen::Vector3d normals[3];
+		Eigen::Vector3d points_in_view[3];
+		Eigen::Vector2d texcoord[3];
+		for (unsigned int i = 0; i < 3; ++i) {
+			Eigen::Vector3d position_i = mesh.vertices[iter.v[i]].get_position();
+			normals[i] = (m_n * mesh.normals[iter.n[i]]).normalized();
+			points_in_view[i] = util_rd::homo_to_v3(r.m_cam * r.m_model * position_i.homogeneous());
+			texcoord[i] = mesh.texcoords[iter.t[i]];
+		}
+
+		for (unsigned int i = 0; i < 3; ++i) {
+			Eigen::Vector3d e1 = points_in_view[(i + 1) % 3] - points_in_view[i];
+			Eigen::Vector3d e2 = points_in_view[(i + 2) % 3] - points_in_view[i];
+			double dU1 = texcoord[(i + 1) % 3][0] - texcoord[i][0];
+			double dU2 = texcoord[(i + 2) % 3][0] - texcoord[i][0];
+			double dV1 = texcoord[(i + 1) % 3][1] - texcoord[i][1];
+			double dV2 = texcoord[(i + 2) % 3][1] - texcoord[i][1];
+			Eigen::Vector3d t = (e1 * dV2 - e2 * dV1) / (dU1 * dV2 - dU2 * dV1);
+			mesh.vertices[iter.v[i]].tangent += (t - t.dot(normals[i]) * normals[i]).normalized();
+		}
+	}
+
+	for (auto& iter : mesh.vertices) {
+		iter.tangent.normalize();
+	}
+
+	num_tri = 0;
 	for (const auto& iter : mesh.triangles) {
 		std::cout << "number of triangle: " << ++num_tri << std::endl;
 		Eigen::Vector3d pixels[3];
@@ -1127,17 +1157,7 @@ void normal_map_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Textu
 			normals[i] = (m_n * mesh.normals[iter.n[i]]).normalized();
 			points_in_view[i] = util_rd::homo_to_v3(r.m_cam * r.m_model * position_i.homogeneous());
 			texcoord[i] = mesh.texcoords[iter.t[i]];
-		}
-
-		for (unsigned int i = 0; i < 3; ++i) {
-			Eigen::Vector3d e1 = pixels[(i + 1) % 3] - pixels[i];
-			Eigen::Vector3d e2 = pixels[(i + 2) % 3] - pixels[i];
-			double dU1 = texcoord[(i + 1) % 3][0] - texcoord[i][0];
-			double dU2 = texcoord[(i + 2) % 3][0] - texcoord[i][0];
-			double dV1 = texcoord[(i + 1) % 3][1] - texcoord[i][1];
-			double dV2 = texcoord[(i + 2) % 3][1] - texcoord[i][1];
-			Eigen::Vector3d t = (e1 * dV2 - e2 * dV1) / (dU1 * dV2 - dU2 * dV1);
-			tangents[i] = (t - t.dot(normals[i]) * normals[i]).normalized();
+			tangents[i] = mesh.vertices[iter.v[i]].get_tangent();
 		}
 
 		auto p0 = pixels[0];
@@ -1224,7 +1244,7 @@ void displacement_map_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex:
 	Eigen::Vector3d ks = { 0.78125, 0.78125, 0.78125 };
 	Eigen::Vector3d kd = { 1, 1, 1 };
 
-	double kh = 0.00, kn = 0.5;
+	double kh = 0.001, kn = 0.8;
 	auto m_n = (r.m_uvw * r.m_model.block(0, 0, 3, 3)).inverse().transpose();
 	//auto light_pos_view = util_rd::homo_to_v3(r.m_cam * light_position.homogeneous());
 	//Eigen::Vector3d direc_light = -(r.m_uvw * light).normalized();
@@ -1237,6 +1257,35 @@ void displacement_map_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex:
 	start_time = clock();
 	for (const auto& iter : mesh.triangles) {
 		std::cout << "number of triangle: " << ++num_tri << std::endl;
+		Eigen::Vector3d normals[3];
+		Eigen::Vector3d points_in_view[3];
+		Eigen::Vector2d texcoord[3];
+		for (unsigned int i = 0; i < 3; ++i) {
+			Eigen::Vector3d position_i = mesh.vertices[iter.v[i]].get_position();
+			normals[i] = (m_n * mesh.normals[iter.n[i]]).normalized();
+			points_in_view[i] = util_rd::homo_to_v3(r.m_cam * r.m_model * position_i.homogeneous());
+			texcoord[i] = mesh.texcoords[iter.t[i]];
+		}
+
+		for (unsigned int i = 0; i < 3; ++i) {
+			Eigen::Vector3d e1 = points_in_view[(i + 1) % 3] - points_in_view[i];
+			Eigen::Vector3d e2 = points_in_view[(i + 2) % 3] - points_in_view[i];
+			double dU1 = texcoord[(i + 1) % 3][0] - texcoord[i][0];
+			double dU2 = texcoord[(i + 2) % 3][0] - texcoord[i][0];
+			double dV1 = texcoord[(i + 1) % 3][1] - texcoord[i][1];
+			double dV2 = texcoord[(i + 2) % 3][1] - texcoord[i][1];
+			Eigen::Vector3d t = (e1 * dV2 - e2 * dV1) / (dU1 * dV2 - dU2 * dV1);
+			mesh.vertices[iter.v[i]].tangent += (t - t.dot(normals[i]) * normals[i]).normalized();
+		}
+	}
+
+	for (auto& iter : mesh.vertices) {
+		iter.tangent.normalize();
+	}
+
+	num_tri = 0;
+	for (const auto& iter : mesh.triangles) {
+		std::cout << "number of triangle: " << ++num_tri << std::endl;
 		Eigen::Vector3d pixels[3];
 		Eigen::Vector3d normals[3];
 		Eigen::Vector3d tangents[3];
@@ -1246,20 +1295,11 @@ void displacement_map_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex:
 		for (unsigned int i = 0; i < 3; ++i) {
 			Eigen::Vector3d position_i = mesh.vertices[iter.v[i]].get_position();
 			normals[i] = (m_n * mesh.normals[iter.n[i]]).normalized();
+			auto n = normals[i];
 			points_in_view[i] = util_rd::homo_to_v3(r.m_cam * r.m_model * position_i.homogeneous());
 			texcoord[i] = mesh.texcoords[iter.t[i]];		
-		}
-
-		for (unsigned int i = 0; i < 3; ++i) {
-			Eigen::Vector3d n = normals[i];
-
-			Eigen::Vector3d e1 = points_in_view[(i + 1) % 3] - points_in_view[i];
-			Eigen::Vector3d e2 = points_in_view[(i + 2) % 3] - points_in_view[i];
-			double dU1 = texcoord[(i + 1) % 3][0] - texcoord[i][0];
-			double dU2 = texcoord[(i + 2) % 3][0] - texcoord[i][0];
-			double dV1 = texcoord[(i + 1) % 3][1] - texcoord[i][1];
-			double dV2 = texcoord[(i + 2) % 3][1] - texcoord[i][1];
-			Eigen::Vector3d t = (e1 * dV2 - e2 * dV1) / (dU1 * dV2 - dU2 * dV1);
+				
+			Eigen::Vector3d t = mesh.vertices[iter.v[i]].get_tangent();
 			t = (t - t.dot(n) * n).normalized();
 			Eigen::Vector3d b = n.cross(t);
 

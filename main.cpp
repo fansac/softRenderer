@@ -21,16 +21,15 @@ using namespace Eigen;
 
 
 int main(void) {
-	cout << "main start" << endl;
+	std::cout << "main start" << endl;
 	system("pause");
 
 #ifdef RENDER
-
 	// rasterizer setting
 	rst::Rasterizer r(WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	//double angle = 140, scale = 2.5;
-	double angle = 0, scale = 1.2;
+	double angle = -30, scale = 1.2;
 	//Eigen::Vector3d trans = { 401.5, 351, 359.56 };
 	//Eigen::Vector3d trans = { 0, 0, 0 };
 	r.set_model_transformation(angle, scale);
@@ -46,51 +45,37 @@ int main(void) {
 	r.calculate_matrix();
 
 	cout << endl << "read model file" << endl;
-	system("pause");
-
-	cout << "test: " << endl;
-	Eigen::Vector3d a = { 1, 2, 3 }, b = { 4, 5, 6 }, c = { 7, 8, 9 };
-	Eigen::Matrix3d mm;
-	mm.col(0) = a; mm.col(1) = b; mm.col(2) = c;
-	a.normalize();
-	cout << a << endl;
-	system("pause");
-	
 	// read obj spot_triangulated_good unit_sphere
-	string file_name = "sphere_highres.obj";
+	string file_name = "./model/sphere/sphere_highres.obj";
+
+	cout << boolalpha << util_rd::is_file_exists_ifstream(file_name) << endl;
+	system("pause");
 	mesh::TriangleMesh mesh;;
 	mesh::read_mesh_from_obj_file(mesh, file_name);
 	std::cout << "obj: " << mesh.obj_name << endl;
 	cout << "AABB: " << "(" <<mesh.x_min << ", " << mesh.x_max << "), (" << mesh.y_min << ", " << mesh.y_max <<
 		"), (" << mesh.z_min << ", " << mesh.z_max << ")" << endl;
-	
 	cout << endl << "read texture file" << endl;
 	std::system("pause");
-	//earthmap1k.jpg
-	string texture_path = "earthmap1k.jpg";
+	//earthmap1k.jpg ; Earth_Sphere_Material.png
+	string texture_path = "./model/earth/Earth_Sphere_Material.png";
 	tex::Texture tex = tex::Texture(texture_path);
-	cv::namedWindow("tex_show");
-	cv::imshow("tex_show", tex.image_data);
-	cv::waitKey();
-	cv::destroyWindow("tex_show");
+	tex.show();
 	
 
-	//string normal_texture_path = "earthbump1k.jpg";
+	//string normal_texture_path = "earthbump1k.jpg"; earth_normalmap.png
 	//tex::Texture normal_tex = tex::Texture(normal_texture_path, tex::texType::bump);
 	// tex::texType::bump
-	string normal_texture_path = "earthbump1k.jpg";
-	tex::Texture normal_tex = tex::Texture(normal_texture_path, tex::texType::bump);
-	cv::namedWindow("tex_show");
-	cv::imshow("tex_show", normal_tex.image_data);
-	cv::waitKey();
-	cv::destroyWindow("tex_show");
+	string normal_texture_path = "./model/earth/earth_normalmap.png";
+	tex::Texture normal_tex = tex::Texture(normal_texture_path, tex::texType::normal);
+	normal_tex.show();
 
 	// shading
 	std::cout << "shading" << std::endl;
 	//gouraud_shading(mesh, r);
 	//phong_shading(mesh, r, tex);
-	//normal_map_shading(mesh, r, tex, normal_tex);
-	displacement_map_shading(mesh, r, tex, normal_tex);
+	normal_map_shading(mesh, r, tex, normal_tex);
+	//displacement_map_shading(mesh, r, tex, normal_tex);
 	//bump_shading(mesh, r, tex, normal_tex);
 	//phong_shading(mesh, r);
 	//phong_shading_shadow(mesh, r);

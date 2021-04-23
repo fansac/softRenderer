@@ -16,6 +16,11 @@ namespace mesh {
 
 		Vertex();
 		Vertex(double x, double y, double z);
+		Eigen::Vector3d position;
+		Eigen::Vector3d normal;
+		Eigen::Vector3d color;
+		Eigen::Vector2d texcoord;
+		Eigen::Vector3d tangent = Eigen::Vector3d::Zero();
 
 		double getX();
 		double getY();
@@ -27,19 +32,14 @@ namespace mesh {
 		void set_normal(Eigen::Vector3d n);
 		void set_color(Eigen::Vector3d c);
 		void set_texcoord(Eigen::Vector2d texcoord);
+		void set_tangent(Eigen::Vector3d tangent);
 
 		Eigen::Vector3d get_position();
 		Eigen::Vector3d get_normal();
 		Eigen::Vector3d get_color();
 		Eigen::Vector2d get_tecoord();
-
-	private:
-		Eigen::Vector3d position;
-		Eigen::Vector3d normal;
-		Eigen::Vector3d color;
-		Eigen::Vector2d texcoord;
+		Eigen::Vector3d get_tangent();
 	};
-
 
 	class Triangle {
 	public:

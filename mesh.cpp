@@ -11,6 +11,7 @@ Eigen::Vector3d mesh::Vertex::get_position() { return this->position; }
 Eigen::Vector3d mesh::Vertex::get_normal() { return this->normal; }
 Eigen::Vector3d mesh::Vertex::get_color() { return this->color;  }
 Eigen::Vector2d mesh::Vertex::get_tecoord() { return this->texcoord;  }
+Eigen::Vector3d mesh::Vertex::get_tangent() { return this->tangent;  }
 
 void mesh::Vertex::setX(double x) { this->position[0] = x; }
 void mesh::Vertex::setY(double y) { this->position[1] = y; }
@@ -19,7 +20,7 @@ void mesh::Vertex::set_position(Eigen::Vector3d new_position) { this->position =
 void mesh::Vertex::set_normal(Eigen::Vector3d n) { this->normal = n; }
 void mesh::Vertex::set_color(Eigen::Vector3d c) { this->color = c;  }
 void mesh::Vertex::set_texcoord(Eigen::Vector2d texcorrd) { this->texcoord = texcoord;  }
-
+void mesh::Vertex::set_tangent(Eigen::Vector3d tangent) { this->tangent = tangent;  }
 // class Triangle
 mesh::Triangle::Triangle() {
 	memset(this->v, UINT16_MAX, 3 * sizeof(uint16_t));
