@@ -1,0 +1,11 @@
+vs2019项目配置
+VC++目录-包含目录
+D:\eigen-3.3.9
+D:\OpenCV\build\include\opencv2
+D:\OpenCV\build\include
+
+链接器-常规-附加库目录
+D:\OpenCV\build\x64\vc15\lib
+
+链接器-输入-附加依赖项
+opencv_world451d.lib
