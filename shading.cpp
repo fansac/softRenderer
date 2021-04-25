@@ -1117,15 +1117,14 @@ void normal_map_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex::Textu
 			points_in_view[i] = util_rd::homo_to_v3(r.m_cam * r.m_model * position_i.homogeneous());
 			texcoord[i] = mesh.texcoords[iter.t[i]];
 		}
-
+		Eigen::Vector3d e1 = points_in_view[1] - points_in_view[0];
+		Eigen::Vector3d e2 = points_in_view[2] - points_in_view[0];
+		double dU1 = texcoord[1][0] - texcoord[0][0];
+		double dU2 = texcoord[2][0] - texcoord[0][0];
+		double dV1 = texcoord[1][1] - texcoord[0][1];
+		double dV2 = texcoord[2][1] - texcoord[0][1];
+		Eigen::Vector3d t = (e1 * dV2 - e2 * dV1) / (dU1 * dV2 - dU2 * dV1);
 		for (unsigned int i = 0; i < 3; ++i) {
-			Eigen::Vector3d e1 = points_in_view[(i + 1) % 3] - points_in_view[i];
-			Eigen::Vector3d e2 = points_in_view[(i + 2) % 3] - points_in_view[i];
-			double dU1 = texcoord[(i + 1) % 3][0] - texcoord[i][0];
-			double dU2 = texcoord[(i + 2) % 3][0] - texcoord[i][0];
-			double dV1 = texcoord[(i + 1) % 3][1] - texcoord[i][1];
-			double dV2 = texcoord[(i + 2) % 3][1] - texcoord[i][1];
-			Eigen::Vector3d t = (e1 * dV2 - e2 * dV1) / (dU1 * dV2 - dU2 * dV1);
 			mesh.vertices[iter.v[i]].tangent += (t - t.dot(normals[i]) * normals[i]).normalized();
 		}
 	}
@@ -1267,14 +1266,14 @@ void displacement_map_shading(mesh::TriangleMesh& mesh, rst::Rasterizer& r, tex:
 			texcoord[i] = mesh.texcoords[iter.t[i]];
 		}
 
+		Eigen::Vector3d e1 = points_in_view[1] - points_in_view[0];
+		Eigen::Vector3d e2 = points_in_view[2] - points_in_view[0];
+		double dU1 = texcoord[1][0] - texcoord[0][0];
+		double dU2 = texcoord[2][0] - texcoord[0][0];
+		double dV1 = texcoord[1][1] - texcoord[0][1];
+		double dV2 = texcoord[2][1] - texcoord[0][1];
+		Eigen::Vector3d t = (e1 * dV2 - e2 * dV1) / (dU1 * dV2 - dU2 * dV1);
 		for (unsigned int i = 0; i < 3; ++i) {
-			Eigen::Vector3d e1 = points_in_view[(i + 1) % 3] - points_in_view[i];
-			Eigen::Vector3d e2 = points_in_view[(i + 2) % 3] - points_in_view[i];
-			double dU1 = texcoord[(i + 1) % 3][0] - texcoord[i][0];
-			double dU2 = texcoord[(i + 2) % 3][0] - texcoord[i][0];
-			double dV1 = texcoord[(i + 1) % 3][1] - texcoord[i][1];
-			double dV2 = texcoord[(i + 2) % 3][1] - texcoord[i][1];
-			Eigen::Vector3d t = (e1 * dV2 - e2 * dV1) / (dU1 * dV2 - dU2 * dV1);
 			mesh.vertices[iter.v[i]].tangent += (t - t.dot(normals[i]) * normals[i]).normalized();
 		}
 	}
